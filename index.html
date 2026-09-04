@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLOCKDOWN - 3D Retro Puzzle Game</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="ambient-glow"></div>
+
+    <!-- Vintage Compaq Presario CRT Monitor Bezel -->
+    <div class="monitor-frame">
+        <div class="crt-screen">
+            <div class="scanlines"></div>
+
+            <main class="game-container">
+                <!-- Left: 3D Pit Viewport -->
+                <section class="pit-section">
+                    <!-- Top-Left Level Badge (Faithful to "LEVEL 0" in video) -->
+                    <div class="level-badge">
+                        <span class="badge-title">LEVEL</span>
+                        <span class="badge-value" id="levelDisplay">0</span>
+                        <span class="badge-sub" id="layerProgressDisplay">0/3 CLEARS</span>
+                    </div>
+
+                    <!-- Main 3D Canvas -->
+                    <canvas id="pitCanvas"></canvas>
+
+                    <!-- Bottom-Left Next Piece 3D Preview (Faithful to video) -->
+                    <div class="preview-box">
+                        <span class="box-label">NEXT</span>
+                        <canvas id="nextCanvas"></canvas>
+                    </div>
+
+                    <!-- Center Floating Banner for Level Up / Blockout -->
+                    <div class="notification-banner" id="notificationBanner">
+                        <div class="banner-title" id="bannerTitle">LEVEL UP!</div>
+                        <div class="banner-subtitle" id="bannerSubtitle">UNLOCKED: FLAT TETROMINOES</div>
+                    </div>
+                </section>
+
+                <!-- Right: Retro DOS HUD Sidebar -->
+                <aside class="sidebar-hud">
+                    <!-- 3D Block Logo: BLOCK DOWN -->
+                    <div class="logo-container">
+                        <div class="logo-row logo-block">BLOCK</div>
+                        <div class="logo-row logo-down">DOWN</div>
+                    </div>
+
+                    <!-- SCORE -->
+                    <div class="hud-box">
+                        <span class="hud-label">SCORE</span>
+                        <span class="hud-value" id="scoreDisplay">0</span>
+                    </div>
+
+                    <!-- CUBES PLAYED (Faithful to video) -->
+                    <div class="hud-box green-box">
+                        <span class="hud-label">CUBES PLAYED</span>
+                        <span class="hud-value green-text" id="cubesDisplay">0</span>
+                    </div>
+
+                    <!-- DEMO MODE Button (Faithful to video) -->
+                    <button class="demo-mode-btn" id="demoModeBtn">
+                        DEMO MODE
+                    </button>
+
+                    <!-- HIGH SCORE -->
+                    <div class="hud-box">
+                        <span class="hud-label">HIGH SCORE</span>
+                        <span class="hud-value small-text" id="highScoreDisplay">0</span>
+                    </div>
+
+                    <!-- PIT Dimensions -->
+                    <div class="hud-box blue-box">
+                        <span class="hud-label">PIT</span>
+                        <span class="hud-value small-text" id="pitSizeDisplay">5x5x12</span>
+                    </div>
+
+                    <!-- BLOCK SET -->
+                    <div class="hud-box green-box">
+                        <span class="hud-label">BLOCK SET</span>
+                        <span class="hud-value small-text green-text" id="blockSetDisplay">PROGRESSION</span>
+                    </div>
+
+                    <!-- Buttons Row: Audio, CRT Bezel, Settings -->
+                    <div class="hud-btn-row">
+                        <button class="retro-btn active" id="audioBtn">AUDIO: ON</button>
+                        <button class="retro-btn active" id="crtBtn">CRT: ON</button>
+                        <button class="retro-btn" id="settingsBtn">CONFIG</button>
+                    </div>
+
+                    <!-- Quick Key Reference -->
+                    <div class="controls-panel" id="controlsGuide">
+                        <!-- Populated by JavaScript based on control scheme -->
+                    </div>
+                </aside>
+            </main>
+
+            <!-- On-Screen Touch / Mouse Controller -->
+            <div class="touch-controller">
+                <div class="touch-group">
+                    <button class="touch-btn" data-act="left">&larr;</button>
+                    <button class="touch-btn" data-act="right">&rarr;</button>
+                    <button class="touch-btn" data-act="up">&uarr;</button>
+                    <button class="touch-btn" data-act="down">&darr;</button>
+                    <button class="touch-btn" data-act="drop" style="background:#ff3b30;color:#fff;">DROP</button>
+                </div>
+                <div class="touch-group">
+                    <button class="touch-btn" data-act="pitch-up">PITCH &uarr;</button>
+                    <button class="touch-btn" data-act="pitch-down">PITCH &darr;</button>
+                    <button class="touch-btn" data-act="yaw-left">YAW &larr;</button>
+                    <button class="touch-btn" data-act="yaw-right">YAW &rarr;</button>
+                    <button class="touch-btn" data-act="roll-ccw">ROLL &#8634;</button>
+                    <button class="touch-btn" data-act="roll-cw">ROLL &#8635;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitor Brand Badge on Bezel (Compaq Presario 1425) -->
+        <div class="monitor-badge">
+            <div class="badge-brand">
+                <span class="badge-logo-icon"></span>
+                <span>COMPAQ PRESARIO</span>
+            </div>
+            <span>1425 MULTIMEDIA</span>
+        </div>
+    </div>
+
+    <!-- Configuration Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">GAME CONFIGURATION</div>
+                <button class="close-btn" id="closeSettings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-row">
+                    <label for="pitSelect">Pit Dimensions:</label>
+                    <select id="pitSelect" class="setting-select">
+                        <option value="5x5x12" selected>5 x 5 x 12 (Classic Standard)</option>
+                        <option value="3x3x10">3 x 3 x 10 (Compact Quick)</option>
+                        <option value="5x5x10">5 x 5 x 10 (Challenging Shallow)</option>
+                        <option value="7x7x18">7 x 7 x 18 (Extensive Cavern)</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label for="modeSelect">Block Progression:</label>
+                    <select id="modeSelect" class="setting-select">
+                        <option value="progression" selected>Level Progression (Unlock Basic &rarr; 3D)</option>
+                        <option value="flat">Flat Only (Classic 8 Flat Pieces)</option>
+                        <option value="basic">Basic (Flat + Soma 3D Pieces)</option>
+                        <option value="extended">Extended (All 41 Polycubes)</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label for="controlSelect">Control Layout:</label>
+                    <select id="controlSelect" class="setting-select">
+                        <option value="classic" selected>Classic DOS (Arrows Move XY, QWE/ASD Rotate)</option>
+                        <option value="wasd">WASD Mode (WASD/Arrows Move XY, UIO/JKL Rotate)</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label for="layersPerLevelSelect">Clears to Level Up:</label>
+                    <select id="layersPerLevelSelect" class="setting-select">
+                        <option value="2">2 Full Grids</option>
+                        <option value="3" selected>3 Full Grids (Default)</option>
+                        <option value="4">4 Full Grids</option>
+                        <option value="5">5 Full Grids</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <label for="scanlineToggle">CRT Scanlines:</label>
+                    <input type="checkbox" id="scanlineToggle" checked style="transform: scale(1.3); cursor: pointer;">
+                </div>
+
+                <div style="border-top: 1px dashed var(--dos-green-dim); padding-top: 10px; font-size: 13px; color: var(--dos-gray); line-height: 1.5;">
+                    <p><strong style="color:var(--dos-yellow);">Tips:</strong></p>
+                    <p>&bull; Press <kbd>P</kbd> to Pause &bull; <kbd>R</kbd> to Restart &bull; <kbd>M</kbd> to Mute</p>
+                    <p>&bull; Clear a full horizontal slice (5x5 = 25 cubes) to wipe the layer!</p>
+                    <p>&bull; Empty the entire pit to trigger the <strong>BLOCK OUT</strong> jackpot!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

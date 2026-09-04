@@ -1,0 +1,629 @@
+/* ==========================================================================
+   Blockdown - Authentic 1989 DOS / CRT Retro Stylesheet
+   Respects the visual art of California Dreams' Blockout with vintage Compaq
+   Presario CRT bezel, scanlines, and authentic phosphor green & VGA colors.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+
+:root {
+    --dos-black: #050706;
+    --dos-green: #00e040;
+    --dos-green-bright: #39ff14;
+    --dos-green-dim: rgba(0, 224, 64, 0.35);
+    --dos-blue: #0a84ff;
+    --dos-royal-blue: #1e60ff;
+    --dos-cyan: #00e5ff;
+    --dos-red: #ff3b30;
+    --dos-orange: #ff9500;
+    --dos-yellow: #ffd60a;
+    --dos-white: #ffffff;
+    --dos-gray: #a0a8a0;
+    
+    --bezel-color: #d6ccba;
+    --bezel-shadow: #887d69;
+    --bezel-highlight: #ede4d5;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    background-color: #121415;
+    color: var(--dos-green);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+/* Ambient room lighting */
+.ambient-glow {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120vw;
+    height: 120vh;
+    background: radial-gradient(circle, rgba(0, 224, 64, 0.04) 0%, rgba(0, 0, 0, 0.95) 75%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ==========================================================================
+   CRT Monitor Housing & Bezel (Vintage Compaq Presario Style)
+   ========================================================================== */
+.monitor-frame {
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(135deg, var(--bezel-highlight) 0%, var(--bezel-color) 40%, var(--bezel-shadow) 100%);
+    border-radius: 28px;
+    padding: 32px 36px 42px 36px;
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.9),
+        inset 0 2px 6px rgba(255, 255, 255, 0.8),
+        inset 0 -6px 12px rgba(0, 0, 0, 0.45);
+    border: 4px solid #b5a995;
+    max-width: 1100px;
+    width: 100%;
+}
+
+.monitor-frame.no-bezel {
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+/* Brand badge on vintage monitor bottom */
+.monitor-badge {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 10px 0 10px;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #4a443a;
+    text-transform: uppercase;
+}
+
+.badge-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge-logo-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background-color: #d32f2f;
+    border-radius: 2px;
+}
+
+.monitor-frame.no-bezel .monitor-badge {
+    display: none;
+}
+
+/* ==========================================================================
+   Inner CRT Screen & Scanlines
+   ========================================================================== */
+.crt-screen {
+    position: relative;
+    background-color: var(--dos-black);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 
+        inset 0 0 35px rgba(0, 0, 0, 0.95),
+        inset 0 0 12px rgba(0, 224, 64, 0.15),
+        0 0 10px rgba(0, 0, 0, 0.6);
+    border: 3px solid #222524;
+}
+
+.monitor-frame.no-bezel .crt-screen {
+    border-radius: 8px;
+    border-color: #333;
+}
+
+/* Authentic CRT scanlines effect */
+.scanlines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0),
+        rgba(255,255,255,0) 50%,
+        rgba(0, 0, 0, 0.38) 50%,
+        rgba(0, 0, 0, 0.38)
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.85;
+}
+
+.scanlines.off {
+    display: none;
+}
+
+/* Screen curvature and phosphor glow */
+.crt-screen::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(18, 255, 60, 0.03) 0%, rgba(0, 0, 0, 0.45) 90%);
+    pointer-events: none;
+    z-index: 11;
+}
+
+/* ==========================================================================
+   Main Game Layout (Pit Viewport on Left, Retro HUD on Right)
+   ========================================================================== */
+.game-container {
+    display: grid;
+    grid-template-columns: 1fr 310px;
+    gap: 16px;
+    padding: 16px;
+    position: relative;
+    min-height: 640px;
+}
+
+/* Left: Pit Canvas Viewport */
+.pit-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 580px;
+}
+
+#pitCanvas {
+    width: 100%;
+    height: 100%;
+    min-height: 580px;
+    display: block;
+    background: #000;
+}
+
+/* Top-Left Level Badge (matching video: "LEVEL 0") */
+.level-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 12;
+    border: 2px solid var(--dos-cyan);
+    background-color: rgba(5, 7, 6, 0.85);
+    padding: 4px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.35);
+}
+
+.level-badge .badge-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--dos-cyan);
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.level-badge .badge-value {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 20px;
+    color: var(--dos-white);
+    text-shadow: 0 0 6px var(--dos-cyan);
+}
+
+.level-badge .badge-sub {
+    font-size: 9px;
+    font-weight: bold;
+    color: var(--dos-yellow);
+    letter-spacing: 1px;
+    margin-top: 3px;
+    text-transform: uppercase;
+}
+
+/* Bottom-Left 3D Next Piece Preview Box (matching video) */
+.preview-box {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    z-index: 12;
+    width: 130px;
+    height: 130px;
+    border: 2px solid var(--dos-green);
+    background-color: rgba(5, 7, 6, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 0 10px rgba(0, 224, 64, 0.3);
+}
+
+.preview-box .box-label {
+    position: absolute;
+    top: 3px;
+    left: 6px;
+    font-size: 11px;
+    color: var(--dos-green);
+    letter-spacing: 1px;
+    font-weight: bold;
+    z-index: 2;
+}
+
+#nextCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Floating HUD Announcements (Level Up, Block Out) */
+.notification-banner {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.92);
+    border: 3px solid var(--dos-yellow);
+    padding: 18px 30px;
+    text-align: center;
+    z-index: 20;
+    box-shadow: 0 0 25px rgba(255, 214, 10, 0.6);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.notification-banner.show {
+    opacity: 1;
+}
+
+.notification-banner .banner-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 22px;
+    color: var(--dos-yellow);
+    text-shadow: 0 0 10px var(--dos-yellow);
+    margin-bottom: 8px;
+}
+
+.notification-banner .banner-subtitle {
+    font-size: 15px;
+    color: var(--dos-white);
+}
+
+/* ==========================================================================
+   Right Sidebar HUD (Faithful to original Blockout / Video)
+   ========================================================================== */
+.sidebar-hud {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 6px 8px;
+    z-index: 12;
+}
+
+/* 3D Block Logo: "BLOCK DOWN" */
+.logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px 12px 4px;
+    border-bottom: 2px solid var(--dos-green-dim);
+}
+
+.logo-row {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    line-height: 1.15;
+}
+
+/* 3D Isometric shaded text effect */
+.logo-block {
+    color: #00ffff;
+    text-shadow: 
+        1px 1px 0 #0088cc,
+        2px 2px 0 #0066aa,
+        3px 3px 0 #004488,
+        4px 4px 0 #002266,
+        5px 5px 0 #001144,
+        0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+.logo-down {
+    color: #ff3b30;
+    text-shadow: 
+        1px 1px 0 #cc2015,
+        2px 2px 0 #aa180f,
+        3px 3px 0 #88120a,
+        4px 4px 0 #660c06,
+        5px 5px 0 #440803,
+        0 0 15px rgba(255, 59, 48, 0.5);
+}
+
+/* Classic Retro Box */
+.hud-box {
+    border: 2px solid var(--dos-cyan);
+    background-color: rgba(0, 0, 0, 0.85);
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: inset 0 0 8px rgba(0, 229, 255, 0.15);
+}
+
+.hud-box.green-box {
+    border-color: var(--dos-green);
+    box-shadow: inset 0 0 8px rgba(0, 224, 64, 0.15);
+}
+
+.hud-box.blue-box {
+    border-color: var(--dos-blue);
+    box-shadow: inset 0 0 8px rgba(10, 132, 255, 0.15);
+}
+
+.hud-label {
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: var(--dos-cyan);
+    margin-bottom: 3px;
+    text-transform: uppercase;
+}
+
+.green-box .hud-label {
+    color: var(--dos-green);
+}
+
+.blue-box .hud-label {
+    color: var(--dos-blue);
+}
+
+.hud-value {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 18px;
+    color: var(--dos-yellow);
+    text-shadow: 0 0 6px rgba(255, 214, 10, 0.4);
+}
+
+.hud-value.green-text {
+    color: var(--dos-green-bright);
+    text-shadow: 0 0 6px rgba(57, 255, 20, 0.4);
+}
+
+.hud-value.small-text {
+    font-size: 13px;
+}
+
+/* DEMO MODE Button (matching video: "DEMO MODE") */
+.demo-mode-btn {
+    background: linear-gradient(to bottom, #d32f2f, #9a0007);
+    border: 2px solid #ff7961;
+    color: var(--dos-yellow);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    padding: 10px 8px;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: 0 4px 0 #5f090c, 0 0 10px rgba(211, 47, 47, 0.5);
+    transition: transform 0.1s, box-shadow 0.1s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.demo-mode-btn:hover {
+    background: linear-gradient(to bottom, #f44336, #b71c1c);
+}
+
+.demo-mode-btn:active, .demo-mode-btn.active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #5f090c, 0 0 16px rgba(255, 235, 59, 0.7);
+    background: linear-gradient(to bottom, #ff9800, #e65100);
+    color: #fff;
+}
+
+/* Control buttons row */
+.hud-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.retro-btn {
+    flex: 1;
+    background: #111;
+    border: 1px solid var(--dos-green);
+    color: var(--dos-green);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 6px 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s, color 0.15s;
+    text-transform: uppercase;
+}
+
+.retro-btn:hover {
+    background: var(--dos-green);
+    color: #000;
+}
+
+.retro-btn.active {
+    background: var(--dos-cyan);
+    color: #000;
+    border-color: var(--dos-cyan);
+}
+
+/* Controls Guide & Key Hints */
+.controls-panel {
+    border: 1px dashed rgba(0, 224, 64, 0.4);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 10px;
+    font-size: 12px;
+    color: var(--dos-gray);
+    line-height: 1.4;
+    margin-top: 4px;
+}
+
+.controls-panel strong {
+    color: var(--dos-white);
+}
+
+.controls-panel kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    background: #252a28;
+    border: 1px solid #45504c;
+    border-radius: 3px;
+    color: var(--dos-yellow);
+    font-family: monospace;
+    font-size: 11px;
+}
+
+/* On-Screen Touch / Mouse Controller Bar */
+.touch-controller {
+    display: none;
+    margin-top: 8px;
+    background: rgba(0, 0, 0, 0.85);
+    border-top: 2px solid var(--dos-green-dim);
+    padding: 8px;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    z-index: 15;
+}
+
+.touch-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.touch-btn {
+    background: #18201a;
+    border: 1px solid var(--dos-green);
+    color: var(--dos-green);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.touch-btn:active {
+    background: var(--dos-green);
+    color: #000;
+}
+
+/* Modal Overlay for Settings / Help */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background: #080d0a;
+    border: 3px solid var(--dos-green);
+    box-shadow: 0 0 30px rgba(0, 224, 64, 0.4);
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    color: var(--dos-green);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--dos-green);
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+}
+
+.modal-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 15px;
+    color: var(--dos-yellow);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--dos-red);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-size: 14px;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.setting-select {
+    background: #000;
+    border: 1px solid var(--dos-green);
+    color: var(--dos-yellow);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    padding: 4px 8px;
+}
+
+/* Responsive design */
+@media (max-width: 860px) {
+    .game-container {
+        grid-template-columns: 1fr;
+    }
+    .sidebar-hud {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .logo-container {
+        grid-column: 1 / -1;
+    }
+    .touch-controller {
+        display: flex;
+    }
+}

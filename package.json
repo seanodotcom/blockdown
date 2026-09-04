@@ -1,0 +1,20 @@
+{
+  "name": "blockdown",
+  "version": "1.0.0",
+  "description": "Blockdown - Classic 1989 DOS 3D Puzzle Game Clone of Blockout",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-engine.mjs"
+  },
+  "keywords": [
+    "blockout",
+    "tetris",
+    "3d",
+    "retro",
+    "dos",
+    "puzzle"
+  ],
+  "author": "",
+  "license": "MIT"
+}

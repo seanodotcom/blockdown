@@ -6,35 +6,29 @@
 
 import { PerspectiveProjector } from './math3d.js';
 
-// Classic EGA/VGA depth layer colors (from bottom layer up to pit entrance)
+// Classic EGA/VGA depth layer colors (from bottom floor layer 1 up to pit entrance)
 export const LAYER_COLORS = [
-    '#ffffff', // Layer 0 (Pit entrance - white)
-    '#ff3b30', // Layer 1 (Crimson)
-    '#af52de', // Layer 2 (Violet)
-    '#30d158', // Layer 3 (Lime)
-    '#00c7be', // Layer 4 (Teal)
-    '#ff9500', // Layer 5 (Amber)
-    '#ff2d55', // Layer 6 (Magenta)
-    '#ff453a', // Layer 7 (Bright Red)
-    '#ffd60a', // Layer 8 (Golden Yellow)
-    '#32d74b', // Layer 9 (Emerald Green)
-    '#64d2ff', // Layer 10 (Cyan)
-    '#0a84ff', // Layer 11 (DOS Royal Blue - bottom layer in video)
-    '#0055ff', // Layer 12+
-    '#0040dd',
-    '#0030bb',
-    '#002099',
-    '#001588',
-    '#001077'
+    '#1868ff', // Level 1 (Bottom floor) - Royal Blue (DOS Blockout signature)
+    '#00e5ff', // Level 2 (+1) - Bright Cyan
+    '#00e640', // Level 3 (+2) - Vivid Emerald Green
+    '#ffea00', // Level 4 (+3) - Bright Lemon Yellow
+    '#ff8800', // Level 5 (+4) - Deep Tangerine Orange
+    '#ff1493', // Level 6 (+5) - Hot Neon Magenta / Pink
+    '#ff3333', // Level 7 (+6) - Bright Scarlet Red
+    '#aa33ff', // Level 8 (+7) - Electric Violet / Purple
+    '#00f0aa', // Level 9 (+8) - Bright Mint / Aquamarine
+    '#ff5577', // Level 10 (+9) - Warm Coral Pink
+    '#ffbb00', // Level 11 (+10) - Golden Amber
+    '#ffffff'  // Level 12 (+11) - Brilliant White (Entrance)
 ];
 
 export class GameRenderer {
     constructor(canvas, nextCanvas) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
+        this.canvas = canvas || null;
+        this.ctx = canvas && typeof canvas.getContext === 'function' ? canvas.getContext('2d') : null;
 
-        this.nextCanvas = nextCanvas;
-        this.nextCtx = nextCanvas ? nextCanvas.getContext('2d') : null;
+        this.nextCanvas = nextCanvas || null;
+        this.nextCtx = nextCanvas && typeof nextCanvas.getContext === 'function' ? nextCanvas.getContext('2d') : null;
 
         this.projector = new PerspectiveProjector(5, 5, 12);
         this.previewProjector = new PerspectiveProjector(4, 4, 4);
@@ -180,13 +174,16 @@ export class GameRenderer {
 
         // C. Depth rings (transverse rings along Z from 0 to pitD)
         for (let z = 0; z <= pitD; z++) {
-            // Far floor (z = pitD) and entrance (z = 0) are brighter; inner rings are slightly dimmer
+            // Far floor (z = pitD) and entrance (z = 0) are brighter
             if (z === pitD || z === 0) {
+                ctx.globalAlpha = 1.0;
                 ctx.strokeStyle = this.gridColor;
                 ctx.lineWidth = z === pitD ? 2.0 : 1.5;
             } else {
-                ctx.strokeStyle = 'rgba(0, 220, 60, 0.45)';
-                ctx.lineWidth = 1.0;
+                // Color-code depth rings with matching layer color as a visual depth ruler
+                ctx.globalAlpha = 0.50;
+                ctx.strokeStyle = this.getLayerColor(z, pitD);
+                ctx.lineWidth = 1.2;
             }
 
             const p00 = proj.project(0, 0, z, screenW, screenH);
@@ -201,6 +198,7 @@ export class GameRenderer {
             ctx.lineTo(p01.x, p01.y);
             ctx.closePath();
             ctx.stroke();
+            ctx.globalAlpha = 1.0;
 
             // Floor grid (inner grid lines at the very bottom z = pitD)
             if (z === pitD) {
@@ -231,14 +229,8 @@ export class GameRenderer {
      * Layer index counted from bottom (layer 0 = pit floor).
      */
     getLayerColor(z, pitDepth) {
-        // Distance from bottom floor
-        const fromBottom = (pitDepth - 1) - z;
-        if (fromBottom === 0) {
-            // Bottom layer is classic DOS Royal Blue!
-            return '#1e68ff';
-        }
-        const colorIdx = (LAYER_COLORS.length - 1) - Math.min(LAYER_COLORS.length - 1, fromBottom);
-        return LAYER_COLORS[Math.max(0, colorIdx)];
+        const fromBottom = Math.max(0, (pitDepth - 1) - z);
+        return LAYER_COLORS[fromBottom % LAYER_COLORS.length];
     }
 
     /**
@@ -359,9 +351,36 @@ export class GameRenderer {
             ctx.fillStyle = face.color;
             ctx.fill();
 
+            // For front faces facing player, add crisp 3D bevel to clearly separate stacked layers
+            if (face.type === 'front') {
+                // Top-Left inner highlight
+                ctx.beginPath();
+                ctx.moveTo(p3.x, p3.y);
+                ctx.lineTo(p0.x, p0.y);
+                ctx.lineTo(p1.x, p1.y);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.40)';
+                ctx.lineWidth = 1.6;
+                ctx.stroke();
+
+                // Bottom-Right inner shadow
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.lineTo(p3.x, p3.y);
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+                ctx.lineWidth = 1.6;
+                ctx.stroke();
+            }
+
             // Black or dark border around placed block faces
+            ctx.beginPath();
+            ctx.moveTo(p0.x, p0.y);
+            ctx.lineTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.lineTo(p3.x, p3.y);
+            ctx.closePath();
             ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 1.4;
+            ctx.lineWidth = 1.5;
             ctx.stroke();
         }
         ctx.restore();
@@ -395,32 +414,69 @@ export class GameRenderer {
     }
 
     /**
-     * Renders landing shadow (projection of active piece on the floor or landing level).
+     * Computes the landing depth and support status for each cube of the active piece.
+     * Returns array of { c, x, y, z, isSupported }.
      */
-    renderLandingShadow(gameState, screenW, screenH) {
+    getShadowCubeData(gameState) {
+        if (!gameState.activePiece) return [];
         const dropZ = gameState.getLandingZ();
-        if (dropZ === gameState.activePos.z) return;
-
-        const ctx = this.ctx;
-        const proj = this.projector;
         const piece = gameState.activePiece;
         const pos = gameState.activePos;
 
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255, 235, 59, 0.45)';
-        ctx.lineWidth = 1.2;
-        ctx.setLineDash([4, 3]);
-
-        for (const c of piece.cubes) {
+        return piece.cubes.map(c => {
             const x = pos.x + c.x;
             const y = pos.y + c.y;
             const z = dropZ + c.z;
 
-            // Render front face of landing position
-            const p0 = proj.project(x, y, z, screenW, screenH);
-            const p1 = proj.project(x + 1, y, z, screenW, screenH);
-            const p2 = proj.project(x + 1, y + 1, z, screenW, screenH);
-            const p3 = proj.project(x, y + 1, z, screenW, screenH);
+            // Find the lowest cube in this (c.x, c.y) column of the piece
+            let maxCz = c.z;
+            for (const other of piece.cubes) {
+                if (other.x === c.x && other.y === c.y && other.z > maxCz) {
+                    maxCz = other.z;
+                }
+            }
+
+            const lowestZ = dropZ + maxCz;
+            const isSupported = (lowestZ + 1 >= gameState.pitDepth) ||
+                Boolean(gameState.grid[x] && gameState.grid[x][y] && gameState.grid[x][y][lowestZ + 1]);
+
+            return { c, x, y, z, isSupported };
+        });
+    }
+
+    /**
+     * Renders landing shadow (projection of active piece on the floor or landing level).
+     * Highlights supported blocks in prominent light-yellow dotted outline,
+     * and blocks that would not land at the target height / would cover a hole in warning red.
+     */
+    renderLandingShadow(gameState, screenW, screenH) {
+        if (!this.ctx) return;
+        const dropZ = gameState.getLandingZ();
+        const pos = gameState.activePos;
+        const isAtBottom = (dropZ === pos.z);
+
+        const ctx = this.ctx;
+        const proj = this.projector;
+
+        const cubeData = this.getShadowCubeData(gameState);
+        const hasUnsupported = cubeData.some(d => !d.isSupported);
+
+        // If piece has already landed and all blocks are supported, no ghost shadow needed
+        if (isAtBottom && !hasUnsupported) return;
+
+        // Sort back-to-front by depth (painter's algorithm)
+        cubeData.sort((a, b) => b.z - a.z);
+
+        ctx.save();
+
+        for (const d of cubeData) {
+            // When already at bottom, only draw warning red outlines for unsupported blocks
+            if (isAtBottom && d.isSupported) continue;
+
+            const p0 = proj.project(d.x, d.y, d.z, screenW, screenH);
+            const p1 = proj.project(d.x + 1, d.y, d.z, screenW, screenH);
+            const p2 = proj.project(d.x + 1, d.y + 1, d.z, screenW, screenH);
+            const p3 = proj.project(d.x, d.y + 1, d.z, screenW, screenH);
 
             ctx.beginPath();
             ctx.moveTo(p0.x, p0.y);
@@ -428,7 +484,26 @@ export class GameRenderer {
             ctx.lineTo(p2.x, p2.y);
             ctx.lineTo(p3.x, p3.y);
             ctx.closePath();
-            ctx.stroke();
+
+            if (!d.isSupported) {
+                // Red warning outline: block would cover a hole / not land on target height
+                ctx.fillStyle = 'rgba(255, 45, 50, 0.16)';
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(255, 59, 59, 0.95)';
+                ctx.lineWidth = 2.0;
+                ctx.setLineDash([5, 3]);
+                ctx.stroke();
+            } else {
+                // Prominent light-yellow dotted outline: block lands flush on floor or support
+                ctx.fillStyle = 'rgba(255, 238, 88, 0.10)';
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(255, 240, 80, 0.88)';
+                ctx.lineWidth = 1.8;
+                ctx.setLineDash([5, 3]);
+                ctx.stroke();
+            }
         }
 
         ctx.restore();
@@ -489,7 +564,8 @@ export class GameRenderer {
         const pitH = gameState.pitHeight;
 
         ctx.save();
-        const flashAlpha = Math.sin(anim.progress * Math.PI * 4) > 0 ? 0.85 : 0.2;
+        // 3 full bright flashes (an extra flash for punchy grid clear)
+        const flashAlpha = Math.sin(anim.progress * Math.PI * 6) > 0 ? 0.92 : 0.15;
         ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha})`;
 
         for (const z of anim.clearedLayers) {

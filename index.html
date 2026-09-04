@@ -36,7 +36,12 @@
                     <!-- Center Floating Banner for Level Up / Blockout -->
                     <div class="notification-banner" id="notificationBanner">
                         <div class="banner-title" id="bannerTitle">LEVEL UP!</div>
-                        <div class="banner-subtitle" id="bannerSubtitle">UNLOCKED: FLAT TETROMINOES</div>
+                        <div class="banner-subtitle" id="bannerSubtitle"></div>
+                        <div class="banner-marquee-wrap" id="bannerMarqueeWrap">
+                            <div class="marquee-header">&diams; NEW UNLOCKED PIECES &diams;</div>
+                            <canvas id="marqueeCanvas" width="460" height="136"></canvas>
+                        </div>
+                        <div class="banner-prompt" id="bannerPrompt">[ PRESS ANY KEY TO PROCEED ]</div>
                     </div>
                 </section>
 
@@ -158,8 +163,8 @@
                 <div class="setting-row">
                     <label for="controlSelect">Control Layout:</label>
                     <select id="controlSelect" class="setting-select">
-                        <option value="classic" selected>Classic DOS (Arrows Move XY, QWE/ASD Rotate)</option>
-                        <option value="wasd">WASD Mode (WASD/Arrows Move XY, UIO/JKL Rotate)</option>
+                        <option value="classic" selected>Classic (Arrows Move XY, W/S Flip, A/D Roll, Q/E Turn)</option>
+                        <option value="wasd">WASD Mode (WASD Move XY, I/K Flip, J/L Roll, U/O Turn)</option>
                     </select>
                 </div>
 

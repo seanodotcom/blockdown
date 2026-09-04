@@ -73,8 +73,8 @@ export class BlockdownGame {
     }
 
     getFallInterval() {
-        // Fall interval decreases (speed increases) with level
-        return Math.max(0.12, 1.05 - this.level * 0.09);
+        // Fall interval decreases gently with level (50ms per level) for balanced progression
+        return Math.max(0.18, 1.05 - this.level * 0.05);
     }
 
     spawnPiece() {
@@ -288,11 +288,11 @@ export class BlockdownGame {
         }
 
         if (fullLayers.length > 0) {
-            // Initiate clearing animation
+            // Initiate clearing animation with 3 full flashes
             this.clearingAnimation = {
                 clearedLayers: fullLayers,
                 timer: 0,
-                duration: 0.28,
+                duration: 0.42,
                 progress: 0
             };
 
@@ -332,9 +332,6 @@ export class BlockdownGame {
         this.score += multiplier * (this.level + 1);
         this.layersClearedTotal += layerCount;
 
-        // Check level progression strictly when complete layers are cleared!
-        this.checkLevelProgression();
-
         // Check if pit is 100% empty -> "BLOCK OUT" Jackpot!
         let isEmpty = true;
         for (let x = 0; x < this.pitWidth; x++) {
@@ -350,11 +347,19 @@ export class BlockdownGame {
             if (!isEmpty) break;
         }
 
+        let isBlockout = false;
         if (isEmpty) {
             // Huge bonus!
             this.score += 10000 * (this.level + 1);
             if (this.audio) this.audio.playBlockout();
-            this.onBlockout();
+            isBlockout = true;
+        }
+
+        // Check level progression strictly when complete layers are cleared!
+        const leveledUp = this.checkLevelProgression(isBlockout);
+
+        if (isBlockout) {
+            this.onBlockout(leveledUp);
         }
 
         this.updateHighScore();
@@ -368,7 +373,7 @@ export class BlockdownGame {
      * Checks if criteria for advancing to next level are met.
      * Levels advance strictly when full horizontal layers (e.g. 5x5 grids) are cleared.
      */
-    checkLevelProgression() {
+    checkLevelProgression(isBlockout = false) {
         const targetLevel = Math.floor(this.layersClearedTotal / this.layersPerLevel);
         if (targetLevel > this.level) {
             const oldLevel = this.level;
@@ -377,8 +382,10 @@ export class BlockdownGame {
 
             const newlyUnlocked = this.pieceManager.getNewlyUnlockedPieces(this.level);
             if (this.audio) this.audio.playLevelUp();
-            this.onLevelUp(this.level, newlyUnlocked, this.layersClearedTotal);
+            this.onLevelUp(this.level, newlyUnlocked, this.layersClearedTotal, isBlockout);
+            return true;
         }
+        return false;
     }
 
     setLayersPerLevel(n) {

@@ -293,6 +293,8 @@ body {
 
 .notification-banner.show {
     opacity: 1;
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 .notification-banner .banner-title {
@@ -306,6 +308,68 @@ body {
 .notification-banner .banner-subtitle {
     font-size: 15px;
     color: var(--dos-white);
+}
+
+.notification-banner.level-up-modal {
+    top: 48%;
+    width: 520px;
+    max-width: 92%;
+    padding: 22px 24px 18px 24px;
+    box-shadow: 0 0 35px rgba(255, 214, 10, 0.75), inset 0 0 15px rgba(255, 214, 10, 0.12);
+}
+
+.banner-marquee-wrap {
+    display: none;
+    margin: 14px auto 8px auto;
+    background: #030604;
+    border: 2px solid var(--dos-green);
+    border-radius: 4px;
+    padding: 8px 6px;
+    box-shadow: inset 0 0 18px rgba(0, 224, 64, 0.25), 0 0 12px rgba(0, 224, 64, 0.2);
+    position: relative;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.banner-marquee-wrap.show {
+    display: block;
+}
+
+.marquee-header {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--dos-green);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-align: center;
+    text-shadow: 0 0 6px var(--dos-green);
+}
+
+#marqueeCanvas {
+    display: block;
+    width: 100%;
+    height: 136px;
+    background: #030604;
+    border-radius: 2px;
+}
+
+.banner-prompt {
+    display: none;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: var(--dos-yellow);
+    margin-top: 12px;
+    letter-spacing: 1px;
+    animation: promptBlink 0.9s infinite alternate;
+}
+
+.banner-prompt.show {
+    display: block;
+}
+
+@keyframes promptBlink {
+    0% { opacity: 0.35; }
+    100% { opacity: 1; text-shadow: 0 0 10px var(--dos-yellow); }
 }
 
 /* ==========================================================================

@@ -12,12 +12,20 @@ A faithful web-based clone of California Dreams' legendary 1989 DOS 3D puzzle ga
 
 - **Retro 1989 DOS Graphics**:
   - Classic green phosphor wireframe perspective tunnel with depth segments.
-  - Placed blocks color-coded by depth layer (classic Royal Blue bottom layer, Cyan, Emerald Green, Yellow, Orange, Red, Magenta).
+  - Placed blocks color-coded by depth layer (classic Royal Blue bottom layer, Cyan, Emerald Green, Yellow, Orange, Red, Magenta) with 3D front-face bevel lighting.
   - Vintage **Compaq Presario 1425 Multimedia** CRT monitor bezel with scanlines, curvature, and screen glow (toggleable via `CRT: ON/OFF`).
   - 3D shaded isometric **BLOCK DOWN** logo and retro DOS HUD layout.
   - 3D rotating **Next Piece** wireframe preview box.
+- **Level Advance Modal & 3D Endless Marquee (v0.2)**:
+  - On level up, the game pauses to showcase newly unlocked polycubes in a seamless, animated horizontal marquee.
+  - Each unlocked piece freely tumbles in 3D space with 100% solid, opaque EGA/VGA shaded faces and multi-line descriptor labels.
+  - Press any key or click to proceed to the next level.
+- **Prominent Landing Shadow & Misplacement Warning (v0.2)**:
+  - High-contrast dotted outline (`rgba(255, 240, 80, 0.88)`) shows the exact landing location.
+  - Blocks that would cover a hole or not land flush at the target floor height are highlighted in **warning red**, preventing accidental overhang misplacements.
 - **Vintage PC Speaker Sound Effects**:
   - Authentically synthesized 1-bit square-wave pulses via Web Audio API: movement ticks, 3D rotation chirps, solid drop thuds, 8-bit staccato layer clear arpeggios, level-up fanfares, and the full **BLOCK OUT** jackpot clear!
+  - 3-flash high-contrast strobe animation on layer wipe.
 - **Progressive Level System**:
   - Levels advance **strictly when complete horizontal layers (5x5 grids = 25 cubes) are cleared** (default: 3 cleared grids per level).
   - **Level 0 (The Basics)**: Monocube (1), Domino (2), Tromino-I (3), Tromino-L (3).
@@ -25,10 +33,10 @@ A faithful web-based clone of California Dreams' legendary 1989 DOS 3D puzzle ga
   - **Level 2 (Skew & Introductory 3D)**: Unlocks Flat-Z snake, 3D Tripod/Corner, and 3D-T.
   - **Level 3 (Soma 3D Chiral Pieces)**: Unlocks full 3D chiral pieces (Screw-Left, Screw-Right, 3D-L).
   - **Level 4+ (Extended Pentacubes)**: Unlocks complex 5-cube shapes.
-  - Descent speed gradually accelerates as you advance!
+  - Gentle fall speed progression curve (50ms per level) for balanced gameplay.
 - **Autonomous AI Demo Mode**:
   - Automatically activates on boot just like classic arcade/DOS games!
-  - Real-time 3D heuristic AI demonstrates gameplay; touch any key to immediately take over.
+  - Real-time 3D heuristic AI demonstrates gameplay at a natural spectator pace; touch any key to immediately take over.
 - **Full Customization (CONFIG)**:
   - Pit Dimensions: 5x5x12 (Classic), 3x3x10 (Compact), 5x5x10, 7x7x18 (Cavern).
   - Block Sets: Level Progression, Flat Only, Basic (Soma), Extended (All 41 polycubes).
@@ -61,9 +69,9 @@ Blockdown supports both **Classic DOS** (default) and **WASD Mode** control layo
 | Action | Classic DOS Scheme (Default) | WASD Mode |
 | :--- | :--- | :--- |
 | **Move XY (Pit Opening)** | <kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd> (<kbd>&darr;</kbd> = Down on Y) | <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or <kbd>Arrows</kbd> (<kbd>S</kbd> / <kbd>&darr;</kbd> = Down on Y) |
-| **Pitch (Tilt Up/Down)** | <kbd>Q</kbd> / <kbd>A</kbd> (or NumPad <kbd>7</kbd>/<kbd>4</kbd>) | <kbd>U</kbd> / <kbd>J</kbd> (or NumPad <kbd>7</kbd>/<kbd>4</kbd>) |
-| **Yaw (Turn Left/Right)** | <kbd>W</kbd> / <kbd>S</kbd> (or NumPad <kbd>8</kbd>/<kbd>5</kbd>) | <kbd>I</kbd> / <kbd>K</kbd> (or NumPad <kbd>8</kbd>/<kbd>5</kbd>) |
-| **Roll (Spin CW/CCW)** | <kbd>E</kbd> / <kbd>D</kbd> (or NumPad <kbd>9</kbd>/<kbd>6</kbd>) | <kbd>O</kbd> / <kbd>L</kbd> (or NumPad <kbd>9</kbd>/<kbd>6</kbd>) |
+| **Pitch (Flip Fwd/Back)** | <kbd>W</kbd> / <kbd>S</kbd> (or NumPad <kbd>8</kbd>/<kbd>2</kbd>) | <kbd>I</kbd> / <kbd>K</kbd> (or NumPad <kbd>8</kbd>/<kbd>2</kbd>) |
+| **Roll (Rotate Left/Right)** | <kbd>A</kbd> / <kbd>D</kbd> (or NumPad <kbd>4</kbd>/<kbd>6</kbd>) | <kbd>J</kbd> / <kbd>L</kbd> (or NumPad <kbd>4</kbd>/<kbd>6</kbd>) |
+| **Yaw (Turn Left/Right in 3D)** | <kbd>Q</kbd> / <kbd>E</kbd> (or NumPad <kbd>7</kbd>/<kbd>9</kbd>) | <kbd>U</kbd> / <kbd>O</kbd> (or NumPad <kbd>7</kbd>/<kbd>9</kbd>) |
 | **Hard Drop (to Floor)** | <kbd>Space</kbd> | <kbd>Space</kbd> |
 | **Soft Drop (1 step in Z)** | <kbd>Shift</kbd> or <kbd>Enter</kbd> | <kbd>Shift</kbd> or <kbd>Enter</kbd> |
 | **Pause / Resume** | <kbd>P</kbd> | <kbd>P</kbd> |

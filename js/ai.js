@@ -9,12 +9,14 @@ import { Piece } from './polycubes.js';
 export class BlockdownAI {
     constructor() {
         this.targetMove = null;
-        this.stepCooldown = 0;
+        this.stepCooldown = 0.4;
+        this.alignedPause = false;
     }
 
     reset() {
         this.targetMove = null;
-        this.stepCooldown = 0;
+        this.stepCooldown = 0.4;
+        this.alignedPause = false;
     }
 
     /**
@@ -183,46 +185,72 @@ export class BlockdownAI {
 
     /**
      * Executes one AI action per step in Demo Mode.
+     * Pacing is tuned to feel natural, deliberate, and watchable.
      */
     update(game, dt) {
         if (!game.activePiece || game.gameOver || game.clearingAnimation) return;
 
         this.stepCooldown -= dt;
         if (this.stepCooldown > 0) return;
-        this.stepCooldown = 0.09; // Speed of AI inputs
 
         if (!this.targetMove) {
             this.targetMove = this.findBestMove(game);
+            this.alignedPause = false;
             if (!this.targetMove) return;
+            // Deliberate pause after spawning / planning a new piece
+            this.stepCooldown = 0.45;
+            return;
         }
 
         // 1. Perform rotations first
         if (this.targetMove.rotations && this.targetMove.rotations.length > 0) {
             const rot = this.targetMove.rotations.shift();
-            game.rotate(rot.axis, rot.dir);
+            const success = game.rotate(rot.axis, rot.dir);
+            if (!success) {
+                // If rotation was blocked, re-plan
+                this.targetMove = null;
+            }
+            this.stepCooldown = 0.35; // Visible 3D rotation cadence
             return;
         }
 
         // 2. Perform translation
         if (game.activePos.x < this.targetMove.x) {
-            game.move(1, 0);
+            const success = game.move(1, 0);
+            if (!success) this.targetMove = null;
+            this.stepCooldown = 0.30;
             return;
         } else if (game.activePos.x > this.targetMove.x) {
-            game.move(-1, 0);
+            const success = game.move(-1, 0);
+            if (!success) this.targetMove = null;
+            this.stepCooldown = 0.30;
             return;
         }
 
         if (game.activePos.y < this.targetMove.y) {
-            game.move(0, 1);
+            const success = game.move(0, 1);
+            if (!success) this.targetMove = null;
+            this.stepCooldown = 0.30;
             return;
         } else if (game.activePos.y > this.targetMove.y) {
-            game.move(0, -1);
+            const success = game.move(0, -1);
+            if (!success) this.targetMove = null;
+            this.stepCooldown = 0.30;
             return;
         }
 
-        // 3. In position! Hard drop
+        // 3. Piece is in position!
+        // First pause briefly so the viewer can appreciate the alignment and landing shadow
+        if (!this.alignedPause) {
+            this.alignedPause = true;
+            this.stepCooldown = 0.40;
+            return;
+        }
+
+        // 4. Drop into place
         game.hardDrop();
         this.targetMove = null;
-        this.stepCooldown = 0.25;
+        this.alignedPause = false;
+        this.stepCooldown = 0.70; // Deliberate settling pause before next piece begins
     }
 }

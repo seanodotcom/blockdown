@@ -203,6 +203,15 @@ export class BlockdownGame {
     }
 
     /**
+     * Adds score points if not in AI/demo mode.
+     */
+    addScore(points) {
+        if (this.demoMode) return;
+        this.score += points;
+        this.updateHighScore();
+    }
+
+    /**
      * Drops the piece down by 1 unit (soft drop).
      */
     softDrop() {
@@ -211,8 +220,7 @@ export class BlockdownGame {
         const newPos = new Vector3(this.activePos.x, this.activePos.y, this.activePos.z + 1);
         if (!this.checkCollision(this.activePiece, newPos)) {
             this.activePos = newPos;
-            this.score += 1;
-            this.updateHighScore();
+            this.addScore(1);
             this.onScoreChange(this.score, this.cubesPlayed);
             return true;
         } else {
@@ -232,8 +240,7 @@ export class BlockdownGame {
         this.activePos.z = landingZ;
 
         // Points for depth dropped
-        this.score += droppedLayers * 2;
-        this.updateHighScore();
+        this.addScore(droppedLayers * 2);
         this.lockPiece();
     }
 
@@ -256,8 +263,7 @@ export class BlockdownGame {
 
         // Increment Cubes Played
         this.cubesPlayed += this.activePiece.cubes.length;
-        this.score += this.activePiece.cubes.length * (this.level + 1);
-        this.updateHighScore();
+        this.addScore(this.activePiece.cubes.length * (this.level + 1));
 
         if (this.audio) this.audio.playDrop();
 
@@ -334,7 +340,7 @@ export class BlockdownGame {
         // Scoring bonuses
         const layerCount = clearedLayers.length;
         const multiplier = [0, 100, 300, 700, 1500, 3000][Math.min(5, layerCount)] || (layerCount * 1000);
-        this.score += multiplier * (this.level + 1);
+        this.addScore(multiplier * (this.level + 1));
         this.layersClearedTotal += layerCount;
 
         // Check if pit is 100% empty -> "BLOCK OUT" Jackpot!
@@ -355,7 +361,7 @@ export class BlockdownGame {
         let isBlockout = false;
         if (isEmpty) {
             // Huge bonus!
-            this.score += 10000 * (this.level + 1);
+            this.addScore(10000 * (this.level + 1));
             if (this.audio) this.audio.playBlockout();
             isBlockout = true;
         }
@@ -367,7 +373,6 @@ export class BlockdownGame {
             this.onBlockout(leveledUp);
         }
 
-        this.updateHighScore();
         this.onScoreChange(this.score, this.cubesPlayed, this.layersClearedTotal, this.layersPerLevel);
 
         this.clearingAnimation = null;
@@ -399,6 +404,7 @@ export class BlockdownGame {
     }
 
     updateHighScore() {
+        if (this.demoMode) return;
         if (this.score > this.highScore) {
             this.highScore = this.score;
             try {

@@ -28,7 +28,11 @@ window.addEventListener('DOMContentLoaded', () => {
     const highScoreDisplay = document.getElementById('highScoreDisplay');
     const pitSizeDisplay = document.getElementById('pitSizeDisplay');
     const blockSetDisplay = document.getElementById('blockSetDisplay');
-    const demoModeBtn = document.getElementById('demoModeBtn');
+    const scoreBox = document.getElementById('scoreBox');
+    const demoToggleBox = document.getElementById('demoToggleBox');
+    const demoModeToggle = document.getElementById('demoModeToggle');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const restartBtn = document.getElementById('restartBtn');
     const notificationBanner = document.getElementById('notificationBanner');
     const bannerTitle = document.getElementById('bannerTitle');
     const bannerSubtitle = document.getElementById('bannerSubtitle');
@@ -39,6 +43,13 @@ window.addEventListener('DOMContentLoaded', () => {
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsModal = document.getElementById('settingsModal');
     const closeSettings = document.getElementById('closeSettings');
+    const restartModal = document.getElementById('restartModal');
+    const closeRestartModal = document.getElementById('closeRestartModal');
+    const confirmRestartBtn = document.getElementById('confirmRestartBtn');
+    const cancelRestartBtn = document.getElementById('cancelRestartBtn');
+    const restartConfirmLevel = document.getElementById('restartConfirmLevel');
+    const restartConfirmScore = document.getElementById('restartConfirmScore');
+    const restartConfirmCubes = document.getElementById('restartConfirmCubes');
     const pitSelect = document.getElementById('pitSelect');
     const modeSelect = document.getElementById('modeSelect');
     const controlSelect = document.getElementById('controlSelect');
@@ -137,13 +148,105 @@ window.addEventListener('DOMContentLoaded', () => {
         if (typeof savedSettings.bezel === 'boolean') {
             bezelOn = savedSettings.bezel;
             monitorFrame.classList.toggle('no-bezel', !bezelOn);
-            crtBtn.textContent = bezelOn ? 'CRT BEZEL: ON' : 'CRT BEZEL: OFF';
+            crtBtn.classList.toggle('active', bezelOn);
+            crtBtn.title = bezelOn ? 'Disable CRT Screen & Bezel' : 'Enable CRT Screen & Bezel';
         }
         if (typeof savedSettings.audioMuted === 'boolean' && savedSettings.audioMuted) {
             audio.isMuted = true;
-            audioBtn.textContent = 'AUDIO: OFF';
             audioBtn.classList.remove('active');
+            audioBtn.title = 'Unmute Audio (M)';
         }
+    }
+
+    function updatePauseBtn() {
+        if (!pauseBtn) return;
+        const isPaused = game.paused;
+        pauseBtn.classList.toggle('active', isPaused);
+        pauseBtn.title = isPaused ? 'Resume Game (P)' : 'Pause Game (P)';
+    }
+
+    function togglePause() {
+        if (game.gameOver) return;
+        if (waitingForLevelAdvance) {
+            dismissLevelModal();
+            return;
+        }
+        game.paused = !game.paused;
+        updatePauseBtn();
+        if (game.paused) {
+            game.saveToStorage();
+            showNotification('PAUSED', 'Press P, Space, or click RESUME to continue', 60000);
+        } else {
+            notificationBanner.classList.remove('show');
+        }
+    }
+
+    let wasPausedBeforeRestartModal = false;
+    let modalClosedTimestamp = 0;
+
+    function requestRestart() {
+        audio.init();
+        if (waitingForLevelAdvance) {
+            dismissLevelModal();
+        }
+
+        // Only ask confirmation if a human game is in progress
+        if (!game.demoMode && !game.gameOver) {
+            wasPausedBeforeRestartModal = game.paused;
+            if (!game.paused) {
+                game.paused = true;
+                updatePauseBtn();
+            }
+
+            if (restartConfirmLevel) restartConfirmLevel.textContent = game.level.toString();
+            if (restartConfirmScore) restartConfirmScore.textContent = game.score.toString();
+            if (restartConfirmCubes) restartConfirmCubes.textContent = game.cubesPlayed.toString();
+
+            if (restartModal) restartModal.classList.add('open');
+            return;
+        }
+
+        // Otherwise (game over or AI demo mode), restart immediately
+        doRestart();
+    }
+
+    function dismissRestartModal(cancelled = true) {
+        if (!restartModal) return;
+        restartModal.classList.remove('open');
+        modalClosedTimestamp = Date.now();
+        if (cancelled) {
+            if (!wasPausedBeforeRestartModal && game.paused && !game.gameOver) {
+                game.paused = false;
+                updatePauseBtn();
+                notificationBanner.classList.remove('show');
+            }
+        }
+    }
+
+    function confirmRestart() {
+        dismissRestartModal(false);
+        doRestart();
+    }
+
+    function doRestart() {
+        game.clearSavedGame();
+        game.reset();
+        game.demoMode = false;
+        if (demoModeToggle) demoModeToggle.checked = false;
+        if (demoToggleBox) demoToggleBox.classList.remove('active');
+        if (scoreBox) {
+            scoreBox.classList.remove('disabled');
+            scoreBox.title = 'Current Score';
+        }
+        updatePauseBtn();
+        levelDisplay.textContent = '0';
+        if (layerProgressDisplay) {
+            layerProgressDisplay.textContent = `0/${game.layersPerLevel} CLEARS`;
+        }
+        scoreDisplay.textContent = '0';
+        cubesDisplay.textContent = '0';
+        ai.reset();
+        showNotification('RESTARTED', 'Game reset. Good luck!', 1800);
     }
 
     function dismissLevelModal() {
@@ -155,6 +258,7 @@ window.addEventListener('DOMContentLoaded', () => {
         bannerPrompt.classList.remove('show');
         bannerSubtitle.style.display = 'block';
         game.paused = false;
+        updatePauseBtn();
     }
 
     const game = new BlockdownGame({
@@ -164,7 +268,7 @@ window.addEventListener('DOMContentLoaded', () => {
         layersPerLevel: initialLayersPerLevel,
         audio: audio,
         onScoreChange: (score, cubes, layersCleared, layersPerLevel) => {
-            scoreDisplay.textContent = score.toString();
+            scoreDisplay.textContent = game.demoMode ? '0' : score.toString();
             cubesDisplay.textContent = cubes.toString();
             highScoreDisplay.textContent = game.highScore.toString();
             if (layerProgressDisplay) {
@@ -217,7 +321,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
 
             if (game.demoMode) {
-                bannerPrompt.textContent = '[ DEMO MODE: ADVANCING... ]';
+                bannerPrompt.textContent = '[ AI MODE: ADVANCING... ]';
                 bannerPrompt.classList.add('show');
                 notificationBanner.classList.add('show');
 
@@ -242,13 +346,15 @@ window.addEventListener('DOMContentLoaded', () => {
             showNotification('★ BLOCK OUT! ★', 'PERFECT PIT CLEAR! +10,000 BONUS!', 4000);
         },
         onGameOver: (finalScore) => {
+            updatePauseBtn();
             showNotification('GAME OVER', `FINAL SCORE: ${finalScore}. Press R to Restart.`, 4500);
             if (game.demoMode) {
                 setTimeout(() => {
                     if (game.demoMode && game.gameOver) {
                         game.reset();
+                        updatePauseBtn();
                         ai.reset();
-                        showNotification('DEMO MODE', 'AI is playing Blockdown. Press any key to play!', 3000);
+                        showNotification('AI MODE', 'AI is playing Blockdown. Press any key to play!', 3000);
                     }
                 }, 4000);
             }
@@ -296,6 +402,29 @@ window.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
         }
 
+        // If restart confirmation modal is open, handle Y/Enter (confirm) and N/Esc (cancel)
+        if (restartModal && restartModal.classList.contains('open')) {
+            if (e.code === 'KeyY' || e.code === 'Enter') {
+                e.preventDefault();
+                confirmRestart();
+                return;
+            }
+            if (e.code === 'KeyN' || e.code === 'Escape') {
+                e.preventDefault();
+                dismissRestartModal(true);
+                return;
+            }
+            return; // Block other gameplay keys
+        }
+
+        // If settings modal is open, Escape closes it
+        if (settingsModal && settingsModal.classList.contains('open')) {
+            if (e.code === 'Escape') {
+                settingsModal.classList.remove('open');
+            }
+            return;
+        }
+
         // If waiting for player to proceed past level complete, any key proceeds
         if (waitingForLevelAdvance) {
             dismissLevelModal();
@@ -314,32 +443,19 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         if (e.code === 'KeyR') {
-            game.clearSavedGame();
-            game.reset();
-            levelDisplay.textContent = '0';
-            if (layerProgressDisplay) {
-                layerProgressDisplay.textContent = `0/${game.layersPerLevel} CLEARS`;
-            }
-            ai.reset();
-            notificationBanner.classList.remove('show');
+            requestRestart();
             return;
         }
 
         if (e.code === 'KeyP' || (game.paused && ['Space', 'Enter'].includes(e.code))) {
-            game.paused = !game.paused;
-            if (game.paused) {
-                game.saveToStorage();
-                showNotification('PAUSED', 'Press P to resume', 60000);
-            } else {
-                notificationBanner.classList.remove('show');
-            }
+            togglePause();
             return;
         }
 
         if (e.code === 'KeyM') {
             const isMuted = audio.toggleMute();
-            audioBtn.textContent = isMuted ? 'AUDIO: OFF' : 'AUDIO: ON';
             audioBtn.classList.toggle('active', !isMuted);
+            audioBtn.title = isMuted ? 'Unmute Audio (M)' : 'Mute Audio (M)';
             saveSettings();
             return;
         }
@@ -407,8 +523,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (waitingForLevelAdvance) {
             dismissLevelModal();
         } else if (game.paused && !game.gameOver && !game.demoMode) {
-            game.paused = false;
-            notificationBanner.classList.remove('show');
+            togglePause();
         }
     });
 
@@ -422,9 +537,18 @@ window.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             const act = btn.getAttribute('data-act');
+            if (act === 'pause') {
+                togglePause();
+                return;
+            }
+            if (act === 'restart') {
+                requestRestart();
+                return;
+            }
             if (game.demoMode) toggleDemoMode(false);
             if (game.paused && !game.gameOver) {
                 game.paused = false;
+                updatePauseBtn();
                 notificationBanner.classList.remove('show');
             }
 
@@ -447,15 +571,29 @@ window.addEventListener('DOMContentLoaded', () => {
     // --- Demo Mode Handler ---
     function toggleDemoMode(enable, resetOnExit = true) {
         const prev = game.demoMode;
-        game.demoMode = enable !== undefined ? enable : !game.demoMode;
-        demoModeBtn.classList.toggle('active', game.demoMode);
+        const target = enable !== undefined ? enable : !game.demoMode;
+        if (target === prev) return;
+        game.demoMode = target;
+        if (demoModeToggle) {
+            demoModeToggle.checked = game.demoMode;
+        }
+        if (demoToggleBox) {
+            demoToggleBox.classList.toggle('active', game.demoMode);
+        }
+        if (scoreBox) {
+            scoreBox.classList.toggle('disabled', game.demoMode);
+            scoreBox.title = game.demoMode ? 'Score accumulation disabled in AI Mode' : 'Current Score';
+        }
         if (game.demoMode) {
+            game.score = 0;
+            scoreDisplay.textContent = '0';
             ai.reset();
-            showNotification('DEMO MODE', 'AI is playing Blockdown. Press any key or button to take over!', 3000);
+            showNotification('AI MODE', 'AI is playing Blockdown. Press any key or button to take over!', 3000);
         } else {
             if (prev && resetOnExit) {
                 game.clearSavedGame();
                 game.reset();
+                updatePauseBtn();
                 levelDisplay.textContent = '0';
                 if (layerProgressDisplay) {
                     layerProgressDisplay.textContent = `0/${game.layersPerLevel} CLEARS`;
@@ -511,8 +649,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (hasRestoredGame) {
         game.demoMode = false;
-        demoModeBtn.classList.remove('active');
+        if (demoModeToggle) demoModeToggle.checked = false;
+        if (demoToggleBox) demoToggleBox.classList.remove('active');
+        if (scoreBox) {
+            scoreBox.classList.remove('disabled');
+            scoreBox.title = 'Current Score';
+        }
         game.paused = true;
+        updatePauseBtn();
         levelDisplay.textContent = game.level.toString();
         if (layerProgressDisplay) {
             const currentInLevel = game.layersClearedTotal % game.layersPerLevel;
@@ -528,16 +672,86 @@ window.addEventListener('DOMContentLoaded', () => {
         toggleDemoMode(true, false);
     }
 
-    demoModeBtn.addEventListener('click', () => {
-        audio.init();
-        toggleDemoMode();
-    });
+    if (demoModeToggle) {
+        demoModeToggle.addEventListener('change', (e) => {
+            // Suppress ghost clicks from closing modals above this toggle
+            if (Date.now() - modalClosedTimestamp < 400) {
+                e.preventDefault();
+                demoModeToggle.checked = game.demoMode;
+                return;
+            }
+            audio.init();
+            toggleDemoMode(demoModeToggle.checked);
+        });
+    }
+
+    if (demoToggleBox) {
+        demoToggleBox.addEventListener('click', (e) => {
+            if (Date.now() - modalClosedTimestamp < 400) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+    }
+
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', () => {
+            audio.init();
+            togglePause();
+        });
+    }
+
+    if (restartBtn) {
+        restartBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            requestRestart();
+        });
+    }
+
+    if (confirmRestartBtn) {
+        confirmRestartBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            confirmRestart();
+        });
+    }
+
+    if (cancelRestartBtn) {
+        cancelRestartBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            dismissRestartModal(true);
+        });
+    }
+
+    if (closeRestartModal) {
+        closeRestartModal.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            dismissRestartModal(true);
+        });
+    }
+
+    if (restartModal) {
+        restartModal.addEventListener('click', (e) => {
+            if (e.target === restartModal) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                dismissRestartModal(true);
+            }
+        });
+    }
 
     // Audio button
     audioBtn.addEventListener('click', () => {
         const isMuted = audio.toggleMute();
-        audioBtn.textContent = isMuted ? 'AUDIO: OFF' : 'AUDIO: ON';
         audioBtn.classList.toggle('active', !isMuted);
+        audioBtn.title = isMuted ? 'Unmute Audio (M)' : 'Mute Audio (M)';
         saveSettings();
     });
 
@@ -545,23 +759,34 @@ window.addEventListener('DOMContentLoaded', () => {
     crtBtn.addEventListener('click', () => {
         bezelOn = !bezelOn;
         monitorFrame.classList.toggle('no-bezel', !bezelOn);
-        crtBtn.textContent = bezelOn ? 'CRT BEZEL: ON' : 'CRT BEZEL: OFF';
+        crtBtn.classList.toggle('active', bezelOn);
+        crtBtn.title = bezelOn ? 'Disable CRT Screen & Bezel' : 'Enable CRT Screen & Bezel';
         handleResize();
         saveSettings();
     });
 
     // Settings Modal
-    settingsBtn.addEventListener('click', () => {
+    settingsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         settingsModal.classList.add('open');
     });
 
-    closeSettings.addEventListener('click', () => {
+    closeSettings.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         settingsModal.classList.remove('open');
+        modalClosedTimestamp = Date.now();
     });
 
     settingsModal.addEventListener('click', (e) => {
         if (e.target === settingsModal) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
             settingsModal.classList.remove('open');
+            modalClosedTimestamp = Date.now();
         }
     });
 

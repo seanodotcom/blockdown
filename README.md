@@ -1,4 +1,4 @@
-# BLOCKDOWN v0.3
+# BLOCKDOWN v0.4
 
 > *Like the classic Blockout... but down!*
 
@@ -10,7 +10,14 @@ A faithful web-based clone of California Dreams' legendary 1989 DOS 3D puzzle ga
 
 ## Features
 
-- **Settings & Mid-Game Auto-Save Persistence (v0.3)**:
+- **Refined v0.4 Retro HUD & Controls**:
+  - Balanced **BLOCK DOWN** logo with centered 3D lettering and baseline-aligned subtle version indicator.
+  - Consolidated **SCORE & HIGH SCORE** displays on a single compact row at the top of the HUD.
+  - **Score Isolation & Lock in AI Mode**: SCORE accumulation is locked while AI Mode is active; the SCORE box displays a lock icon and dimmed disabled state.
+  - **Tactile Icon Toggles & Restart Option**: Dedicated retro SVG icon toggles for **Pause / Play**, **Restart**, **Audio (Sound/Mute)**, **CRT Bezel**, and **Settings**.
+  - **In-Progress Restart Confirmation Modal**: Prevents accidental loss of active gameplay; prompts with a stats preview (Level, Score, Cubes) and keyboard shortcuts (<kbd>Y</kbd>/<kbd>Enter</kbd> to confirm, <kbd>N</kbd>/<kbd>Esc</kbd> or close button to safely cancel and resume).
+  - Interactive retro DOS-style **AI MODE** toggle switch with illuminated ON/OFF states.
+- **Settings & Mid-Game Auto-Save Persistence**:
   - All game configuration preferences (Pit Dimensions, Block Progression Mode, Control Layout, Clears to Level Up, CRT Scanlines, CRT Bezel, Audio Mute) are preserved across browser refreshes and sessions via `localStorage`.
   - Mid-game session state is continuously auto-saved on piece locks, pause, tab hidden, and window close.
   - On reopening the browser, active placed pit blocks, level, score, and active falling piece are safely restored in a paused state under the **GAME SAVED** modal until the player interacts.
@@ -18,13 +25,13 @@ A faithful web-based clone of California Dreams' legendary 1989 DOS 3D puzzle ga
   - Classic green phosphor wireframe perspective tunnel with depth segments.
   - Placed blocks color-coded by depth layer (classic Royal Blue bottom layer, Cyan, Emerald Green, Yellow, Orange, Red, Magenta) with 3D front-face bevel lighting.
   - Vintage **Compaq Presario 1425 Multimedia** CRT monitor bezel with scanlines, curvature, and screen glow (toggleable via `CRT: ON/OFF`).
-  - 3D shaded isometric **BLOCK DOWN v0.3** logo and retro DOS HUD layout.
+  - 3D shaded isometric **BLOCK DOWN** logo and retro DOS HUD layout.
   - 3D rotating **Next Piece** wireframe preview box.
-- **Level Advance Modal & 3D Endless Marquee (v0.2)**:
+- **Level Advance Modal & 3D Endless Marquee**:
   - On level up, the game pauses to showcase newly unlocked polycubes in a seamless, animated horizontal marquee.
   - Each unlocked piece freely tumbles in 3D space with 100% solid, opaque EGA/VGA shaded faces and multi-line descriptor labels.
   - Press any key or click to proceed to the next level.
-- **Prominent Landing Shadow & Misplacement Warning (v0.2)**:
+- **Prominent Landing Shadow & Misplacement Warning**:
   - High-contrast dotted outline (`rgba(255, 240, 80, 0.88)`) shows the exact landing location.
   - Blocks that would cover a hole or not land flush at the target floor height are highlighted in **warning red**, preventing accidental overhang misplacements.
 - **Vintage PC Speaker Sound Effects**:
@@ -38,10 +45,10 @@ A faithful web-based clone of California Dreams' legendary 1989 DOS 3D puzzle ga
   - **Level 3 (Soma 3D Chiral Pieces)**: Unlocks full 3D chiral pieces (Screw-Left, Screw-Right, 3D-L).
   - **Level 4+ (Extended Pentacubes)**: Unlocks complex 5-cube shapes.
   - Gentle fall speed progression curve (50ms per level) for balanced gameplay.
-- **Autonomous AI Demo Mode**:
+- **Autonomous AI Mode**:
   - Automatically activates on boot just like classic arcade/DOS games!
-  - Real-time 3D heuristic AI demonstrates gameplay at a natural spectator pace; touch any key to immediately take over.
-- **Full Customization (CONFIG)**:
+  - Real-time 3D heuristic AI demonstrates gameplay at a natural spectator pace; toggle switch or touch any key to immediately take over.
+- **Full Customization (SETTINGS)**:
   - Pit Dimensions: 5x5x12 (Classic), 3x3x10 (Compact), 5x5x10, 7x7x18 (Cavern).
   - Block Sets: Level Progression, Flat Only, Basic (Soma), Extended (All 41 polycubes).
   - Clears to Level Up: 2, 3 (Default), 4, or 5 full grids.
@@ -79,7 +86,7 @@ Blockdown supports both **Classic DOS** (default) and **WASD Mode** control layo
 | **Hard Drop (to Floor)** | <kbd>Space</kbd> | <kbd>Space</kbd> |
 | **Soft Drop (1 step in Z)** | <kbd>Shift</kbd> or <kbd>Enter</kbd> | <kbd>Shift</kbd> or <kbd>Enter</kbd> |
 | **Pause / Resume** | <kbd>P</kbd> | <kbd>P</kbd> |
-| **Restart Game** | <kbd>R</kbd> | <kbd>R</kbd> |
+| **Restart Game** | <kbd>R</kbd> *(with confirmation dialog)* | <kbd>R</kbd> *(with confirmation dialog)* |
 | **Toggle Mute** | <kbd>M</kbd> | <kbd>M</kbd> |
 
 *On-screen touch and mouse buttons are also provided at the bottom of the screen for accessibility and mobile testing.*

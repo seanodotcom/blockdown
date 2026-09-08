@@ -50,13 +50,24 @@
                     <!-- 3D Block Logo: BLOCK DOWN -->
                     <div class="logo-container">
                         <div class="logo-row logo-block">BLOCK</div>
-                        <div class="logo-row logo-down">DOWN <span class="logo-ver">v0.3</span></div>
+                        <div class="logo-row logo-down">DOWN<span class="logo-ver">v0.4</span></div>
                     </div>
 
-                    <!-- SCORE -->
-                    <div class="hud-box">
-                        <span class="hud-label">SCORE</span>
-                        <span class="hud-value" id="scoreDisplay">0</span>
+                    <!-- SCORE & HIGH SCORE on one line -->
+                    <div class="hud-row">
+                        <div class="hud-box" id="scoreBox" title="Current Score">
+                            <span class="hud-label">
+                                <svg class="score-lock-icon" id="scoreLockIcon" width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                                </svg>
+                                SCORE
+                            </span>
+                            <span class="hud-value" id="scoreDisplay">0</span>
+                        </div>
+                        <div class="hud-box">
+                            <span class="hud-label">HIGH SCORE</span>
+                            <span class="hud-value" id="highScoreDisplay">0</span>
+                        </div>
                     </div>
 
                     <!-- CUBES PLAYED (Faithful to video) -->
@@ -65,16 +76,18 @@
                         <span class="hud-value green-text" id="cubesDisplay">0</span>
                     </div>
 
-                    <!-- DEMO MODE Button (Faithful to video) -->
-                    <button class="demo-mode-btn" id="demoModeBtn">
-                        DEMO MODE
-                    </button>
-
-                    <!-- HIGH SCORE -->
-                    <div class="hud-box">
-                        <span class="hud-label">HIGH SCORE</span>
-                        <span class="hud-value small-text" id="highScoreDisplay">0</span>
-                    </div>
+                    <!-- AI MODE Toggle -->
+                    <label class="hud-box demo-toggle-box" id="demoToggleBox" for="demoModeToggle" title="Toggle AI Mode">
+                        <span class="hud-label">AI MODE</span>
+                        <div class="retro-toggle">
+                            <input type="checkbox" id="demoModeToggle" class="retro-toggle-input">
+                            <span class="retro-toggle-track">
+                                <span class="retro-toggle-thumb"></span>
+                                <span class="retro-toggle-text-on">ON</span>
+                                <span class="retro-toggle-text-off">OFF</span>
+                            </span>
+                        </div>
+                    </label>
 
                     <!-- PIT Dimensions -->
                     <div class="hud-box blue-box">
@@ -88,11 +101,55 @@
                         <span class="hud-value small-text green-text" id="blockSetDisplay">PROGRESSION</span>
                     </div>
 
-                    <!-- Buttons Row: Audio, CRT Bezel, Settings -->
+                    <!-- Buttons Row: Pause, Restart, Audio, CRT Bezel, Settings -->
                     <div class="hud-btn-row">
-                        <button class="retro-btn active" id="audioBtn">AUDIO: ON</button>
-                        <button class="retro-btn active" id="crtBtn">CRT: ON</button>
-                        <button class="retro-btn" id="settingsBtn">CONFIG</button>
+                        <button class="retro-btn retro-icon-btn" id="pauseBtn" title="Pause Game (P)" aria-label="Pause Game">
+                            <svg class="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="5" y="4" width="4" height="16" rx="1" />
+                                <rect x="15" y="4" width="4" height="16" rx="1" />
+                            </svg>
+                            <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="6,4 20,12 6,20" />
+                            </svg>
+                        </button>
+                        <button class="retro-btn retro-icon-btn" id="restartBtn" title="Restart Game (R)" aria-label="Restart Game">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                                <path d="M3 3v5h5" />
+                            </svg>
+                        </button>
+                        <button class="retro-btn retro-icon-btn active" id="audioBtn" title="Mute Audio (M)" aria-label="Toggle Audio">
+                            <svg class="icon-audio-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
+                                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                            </svg>
+                            <svg class="icon-audio-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
+                                <line x1="23" y1="9" x2="17" y2="15" />
+                                <line x1="17" y1="9" x2="23" y2="15" />
+                            </svg>
+                        </button>
+                        <button class="retro-btn retro-icon-btn active" id="crtBtn" title="Toggle CRT Screen & Bezel" aria-label="Toggle CRT Bezel">
+                            <svg class="icon-crt-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="3" width="20" height="15" rx="2" />
+                                <line x1="8" y1="21" x2="16" y2="21" />
+                                <line x1="12" y1="18" x2="12" y2="21" />
+                                <circle cx="18" cy="14" r="1" fill="currentColor" />
+                            </svg>
+                            <svg class="icon-crt-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="3" width="20" height="15" rx="2" />
+                                <line x1="8" y1="21" x2="16" y2="21" />
+                                <line x1="12" y1="18" x2="12" y2="21" />
+                                <line x1="2" y1="2" x2="22" y2="22" stroke="var(--dos-red)" stroke-width="2.5" />
+                            </svg>
+                        </button>
+                        <button class="retro-btn retro-icon-btn" id="settingsBtn" title="Game Settings" aria-label="Game Settings">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3" />
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                            </svg>
+                        </button>
                     </div>
 
                     <!-- Quick Key Reference -->
@@ -105,6 +162,8 @@
             <!-- On-Screen Touch / Mouse Controller -->
             <div class="touch-controller">
                 <div class="touch-group">
+                    <button class="touch-btn" data-act="pause" style="background:#0a84ff;color:#fff;">PAUSE</button>
+                    <button class="touch-btn" data-act="restart" style="background:#ff9500;color:#fff;">RESET</button>
                     <button class="touch-btn" data-act="left">&larr;</button>
                     <button class="touch-btn" data-act="right">&rarr;</button>
                     <button class="touch-btn" data-act="up">&uarr;</button>
@@ -132,12 +191,12 @@
         </div>
     </div>
 
-    <!-- Configuration Modal -->
+    <!-- Settings Modal -->
     <div class="modal-overlay" id="settingsModal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">GAME CONFIGURATION</div>
-                <button class="close-btn" id="closeSettings">&times;</button>
+                <div class="modal-title">GAME SETTINGS</div>
+                <button type="button" class="close-btn" id="closeSettings" title="Close Settings" aria-label="Close Settings">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="setting-row">
@@ -193,6 +252,29 @@
         </div>
     </div>
 
-    <script type="module" src="js/main.js"></script>
+    <!-- Restart Confirmation Modal -->
+    <div class="modal-overlay" id="restartModal">
+        <div class="modal-content restart-modal-content">
+            <div class="modal-header restart-modal-header">
+                <div class="modal-title warning-title">&#9888; RESTART GAME?</div>
+                <button type="button" class="close-btn" id="closeRestartModal" title="Cancel &amp; Close (Esc / N)" aria-label="Cancel and Close">&times;</button>
+            </div>
+            <div class="modal-body restart-modal-body">
+                <p class="restart-warning-text">A game is currently in progress!</p>
+                <div class="restart-stats-preview">
+                    <div>LEVEL: <span class="highlight-val" id="restartConfirmLevel">0</span></div>
+                    <div>SCORE: <span class="highlight-val" id="restartConfirmScore">0</span></div>
+                    <div>CUBES: <span class="highlight-val" id="restartConfirmCubes">0</span></div>
+                </div>
+                <p class="restart-prompt-text">Abandon current run and reset pit?</p>
+                <div class="restart-btn-actions">
+                    <button type="button" class="retro-btn danger-btn" id="confirmRestartBtn">RESTART (Y)</button>
+                    <button type="button" class="retro-btn" id="cancelRestartBtn">CANCEL (N)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js?v=0.4.1"></script>
 </body>
 </html>

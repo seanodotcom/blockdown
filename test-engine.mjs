@@ -391,7 +391,15 @@ import('./js/renderer.js').then(({ GameRenderer }) => {
             throw new Error('clearSavedGame failed to remove saved game from storage');
         }
 
-        console.log('PASS: Game state serialization, restoration, and localStorage persistence verified (including empty state overwrite protection)!');
+        // Test that score does not accumulate when demoMode is active
+        const demoGame = new BlockdownGame({ pitWidth: 5, pitHeight: 5, pitDepth: 12 });
+        demoGame.demoMode = true;
+        demoGame.softDrop();
+        demoGame.hardDrop();
+        if (demoGame.score !== 0) {
+            throw new Error(`Score accumulated in demoMode! Expected 0, got ${demoGame.score}`);
+        }
+        console.log('PASS: Score does not accumulate during AI/demo mode verified!');
 
         console.log('--- ALL ENGINE, SHADOW, AND MARQUEE TESTS PASSED! ---');
     });

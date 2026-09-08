@@ -415,6 +415,7 @@ body {
 }
 
 .logo-down {
+    position: relative;
     color: #ff3b30;
     text-shadow: 
         1px 1px 0 #cc2015,
@@ -426,13 +427,18 @@ body {
 }
 
 .logo-ver {
+    position: absolute;
+    left: 100%;
+    bottom: 2px;
+    margin-left: 6px;
     font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 1px;
-    color: var(--dos-yellow);
-    text-shadow: 1px 1px 0 #665500;
-    vertical-align: super;
-    margin-left: 4px;
+    color: var(--dos-gray);
+    opacity: 0.75;
+    text-shadow: none;
+    white-space: nowrap;
+    line-height: 1;
 }
 
 /* Classic Retro Box */
@@ -444,6 +450,67 @@ body {
     flex-direction: column;
     align-items: center;
     box-shadow: inset 0 0 8px rgba(0, 229, 255, 0.15);
+}
+
+/* SCORE & HIGH SCORE on one line */
+.hud-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.hud-row .hud-box {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 4px;
+}
+
+.hud-row .hud-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+.hud-row .hud-value {
+    font-size: 14px;
+}
+
+/* Disabled Score Box in AI Mode */
+#scoreBox {
+    transition: border-color 0.2s, background-color 0.2s, opacity 0.2s;
+}
+
+#scoreBox .score-lock-icon {
+    display: none;
+    width: 10px;
+    height: 10px;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+#scoreBox.disabled {
+    border-color: #3b423e;
+    background-color: rgba(12, 16, 14, 0.7);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.7);
+    cursor: not-allowed;
+}
+
+#scoreBox.disabled .hud-label {
+    color: #657068;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#scoreBox.disabled .score-lock-icon {
+    display: inline-block;
+    color: var(--dos-yellow);
+    filter: drop-shadow(0 0 3px rgba(255, 214, 10, 0.6));
+}
+
+#scoreBox.disabled .hud-value {
+    color: #4a544d;
+    text-shadow: none;
 }
 
 .hud-box.green-box {
@@ -489,53 +556,145 @@ body {
     font-size: 13px;
 }
 
-/* DEMO MODE Button (matching video: "DEMO MODE") */
-.demo-mode-btn {
-    background: linear-gradient(to bottom, #d32f2f, #9a0007);
-    border: 2px solid #ff7961;
-    color: var(--dos-yellow);
-    font-family: 'Press Start 2P', monospace;
-    font-size: 12px;
-    padding: 10px 8px;
+/* DEMO MODE Toggle Switch */
+.demo-toggle-box {
+    border-color: var(--dos-cyan);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 12px;
     cursor: pointer;
-    text-align: center;
-    box-shadow: 0 4px 0 #5f090c, 0 0 10px rgba(211, 47, 47, 0.5);
-    transition: transform 0.1s, box-shadow 0.1s;
-    text-transform: uppercase;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.demo-toggle-box .hud-label {
+    margin-bottom: 0;
+    font-size: 12px;
     letter-spacing: 1px;
+    transition: color 0.2s;
 }
 
-.demo-mode-btn:hover {
-    background: linear-gradient(to bottom, #f44336, #b71c1c);
+.demo-toggle-box:hover {
+    border-color: var(--dos-yellow);
 }
 
-.demo-mode-btn:active, .demo-mode-btn.active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #5f090c, 0 0 16px rgba(255, 235, 59, 0.7);
-    background: linear-gradient(to bottom, #ff9800, #e65100);
-    color: #fff;
+.demo-toggle-box.active {
+    border-color: var(--dos-yellow);
+    box-shadow: inset 0 0 10px rgba(255, 214, 10, 0.2), 0 0 10px rgba(255, 214, 10, 0.25);
+}
+
+.demo-toggle-box.active .hud-label {
+    color: var(--dos-yellow);
+}
+
+.retro-toggle {
+    position: relative;
+    display: inline-block;
+    width: 58px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.retro-toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.retro-toggle-track {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #101412;
+    border: 1px solid #45504c;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.retro-toggle-thumb {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 18px;
+    height: 18px;
+    background: #66726b;
+    border-radius: 2px;
+    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+    z-index: 2;
+}
+
+.retro-toggle-text-on, .retro-toggle-text-off {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    letter-spacing: 1px;
+    pointer-events: none;
+}
+
+.retro-toggle-text-on {
+    left: 6px;
+    color: var(--dos-yellow);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.retro-toggle-text-off {
+    right: 5px;
+    color: var(--dos-gray);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.retro-toggle-input:checked + .retro-toggle-track {
+    background: rgba(255, 214, 10, 0.15);
+    border-color: var(--dos-yellow);
+    box-shadow: 0 0 8px rgba(255, 214, 10, 0.35);
+}
+
+.retro-toggle-input:checked + .retro-toggle-track .retro-toggle-thumb {
+    transform: translateX(34px);
+    background: var(--dos-yellow);
+    box-shadow: 0 0 8px rgba(255, 214, 10, 0.7);
+}
+
+.retro-toggle-input:checked + .retro-toggle-track .retro-toggle-text-on {
+    opacity: 1;
+}
+
+.retro-toggle-input:checked + .retro-toggle-track .retro-toggle-text-off {
+    opacity: 0;
 }
 
 /* Control buttons row */
 .hud-btn-row {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     margin-top: 4px;
+    width: 100%;
 }
 
 .retro-btn {
     flex: 1;
+    min-width: 0;
     background: #111;
     border: 1px solid var(--dos-green);
     color: var(--dos-green);
     font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
-    padding: 6px 4px;
+    padding: 6px 2px;
     cursor: pointer;
     text-align: center;
-    transition: background 0.15s, color 0.15s;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
     text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .retro-btn:hover {
@@ -547,6 +706,67 @@ body {
     background: var(--dos-cyan);
     color: #000;
     border-color: var(--dos-cyan);
+}
+
+/* Icon Toggles & Icon Buttons */
+.retro-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 0;
+    height: 34px;
+    position: relative;
+}
+
+.retro-icon-btn svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    transition: transform 0.15s ease;
+}
+
+.retro-icon-btn:hover svg {
+    transform: scale(1.15);
+}
+
+.retro-icon-btn:active svg {
+    transform: scale(0.92);
+}
+
+/* Audio icon toggle */
+#audioBtn .icon-audio-off { display: block; }
+#audioBtn .icon-audio-on { display: none; }
+#audioBtn.active .icon-audio-off { display: none; }
+#audioBtn.active .icon-audio-on { display: block; }
+
+/* CRT icon toggle */
+#crtBtn .icon-crt-off { display: block; }
+#crtBtn .icon-crt-on { display: none; }
+#crtBtn.active .icon-crt-off { display: none; }
+#crtBtn.active .icon-crt-on { display: block; }
+
+/* Pause icon toggle */
+#pauseBtn .icon-play { display: none; }
+#pauseBtn .icon-pause { display: block; }
+#pauseBtn.active .icon-play { display: block; }
+#pauseBtn.active .icon-pause { display: none; }
+
+#pauseBtn.active {
+    background: var(--dos-yellow);
+    color: #000;
+    border-color: var(--dos-yellow);
+    animation: pausePulse 1s infinite alternate;
+}
+
+#restartBtn:hover {
+    background: var(--dos-orange);
+    border-color: var(--dos-orange);
+    color: #000;
+}
+
+@keyframes pausePulse {
+    0% { opacity: 0.85; }
+    100% { opacity: 1; box-shadow: 0 0 10px rgba(255, 214, 10, 0.6); }
 }
 
 /* Controls Guide & Key Hints */
@@ -614,17 +834,17 @@ body {
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
+    background: rgba(0, 0, 0, 0.82);
+    display: none;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    z-index: 9999;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease;
 }
 
 .modal-overlay.open {
+    display: flex;
     opacity: 1;
     pointer-events: auto;
 }
@@ -638,6 +858,8 @@ body {
     width: 92%;
     box-sizing: border-box;
     color: var(--dos-green);
+    position: relative;
+    z-index: 10000;
 }
 
 .modal-header {
@@ -660,8 +882,16 @@ body {
     border: none;
     color: var(--dos-red);
     font-family: 'Press Start 2P', monospace;
-    font-size: 16px;
+    font-size: 18px;
     cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+    transition: color 0.15s, transform 0.1s;
+}
+
+.close-btn:hover {
+    color: #ff6b6b;
+    transform: scale(1.15);
 }
 
 .modal-body {
@@ -692,6 +922,69 @@ body {
     padding: 4px 8px;
     box-sizing: border-box;
     max-width: 100%;
+}
+
+/* Restart Confirmation Modal */
+.restart-modal-content {
+    max-width: 440px;
+    border-color: var(--dos-orange);
+    box-shadow: 0 0 35px rgba(255, 149, 0, 0.45);
+}
+
+.restart-modal-header {
+    border-color: var(--dos-orange);
+}
+
+.restart-modal-header .warning-title {
+    color: var(--dos-orange);
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.restart-warning-text {
+    color: var(--dos-white);
+    font-size: 14px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.restart-stats-preview {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px dashed var(--dos-orange);
+    padding: 10px 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--dos-gray);
+    margin: 4px 0;
+}
+
+.restart-stats-preview .highlight-val {
+    color: var(--dos-yellow);
+}
+
+.restart-prompt-text {
+    color: var(--dos-yellow);
+    font-size: 13px;
+    text-align: center;
+}
+
+.restart-btn-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.retro-btn.danger-btn {
+    background: #4a0d0d;
+    border-color: var(--dos-red);
+    color: #fff;
+}
+
+.retro-btn.danger-btn:hover {
+    background: var(--dos-red);
+    color: #fff;
 }
 
 @media (max-width: 560px) {

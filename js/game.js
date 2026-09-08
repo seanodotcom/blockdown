@@ -5,7 +5,7 @@
  */
 
 import { Vector3 } from './math3d.js';
-import { PieceManager } from './polycubes.js';
+import { PieceManager, Piece } from './polycubes.js';
 
 export class BlockdownGame {
     constructor(options = {}) {
@@ -94,8 +94,13 @@ export class BlockdownGame {
         // Check if spawn position already collides -> Game Over!
         if (this.checkCollision(this.activePiece, this.activePos)) {
             this.gameOver = true;
+            this.clearSavedGame();
             if (this.audio) this.audio.playGameOver();
             this.onGameOver(this.score);
+        } else {
+            if (!this.demoMode && (this.cubesPlayed > 0 || this.score > 0)) {
+                this.saveToStorage();
+            }
         }
     }
 
@@ -448,5 +453,109 @@ export class BlockdownGame {
                 this.activePos.z += 1;
             }
         }
+    }
+
+    /**
+     * Serializes complete game state to JSON-safe object.
+     */
+    serializeState() {
+        return {
+            pitWidth: this.pitWidth,
+            pitHeight: this.pitHeight,
+            pitDepth: this.pitDepth,
+            grid: this.grid,
+            score: this.score,
+            cubesPlayed: this.cubesPlayed,
+            layersClearedTotal: this.layersClearedTotal,
+            level: this.level,
+            layersPerLevel: this.layersPerLevel,
+            activePiece: this.activePiece ? this.activePiece.serialize() : null,
+            activePos: this.activePos ? { x: this.activePos.x, y: this.activePos.y, z: this.activePos.z } : null,
+            nextPiece: this.nextPiece ? this.nextPiece.serialize() : null,
+            fallTimer: this.fallTimer,
+            lockTimer: this.lockTimer,
+            isLocking: this.isLocking,
+            mode: this.pieceManager.mode,
+            timestamp: Date.now()
+        };
+    }
+
+    /**
+     * Restores game state from serialized data.
+     */
+    restoreState(data) {
+        if (!data || !data.grid) return false;
+
+        this.pitWidth = data.pitWidth || this.pitWidth;
+        this.pitHeight = data.pitHeight || this.pitHeight;
+        this.pitDepth = data.pitDepth || this.pitDepth;
+
+        // Rebuild full grid correctly sized
+        this.grid = Array.from({ length: this.pitWidth }, (_, x) =>
+            Array.from({ length: this.pitHeight }, (_, y) =>
+                Array.from({ length: this.pitDepth }, (_, z) =>
+                    Boolean(data.grid[x] && data.grid[x][y] && data.grid[x][y][z])
+                )
+            )
+        );
+
+        this.score = data.score || 0;
+        this.cubesPlayed = data.cubesPlayed || 0;
+        this.layersClearedTotal = data.layersClearedTotal || 0;
+        this.level = data.level || 0;
+        this.layersPerLevel = data.layersPerLevel || 3;
+        this.gameOver = false;
+        this.paused = true;
+        this.demoMode = false;
+        this.clearingAnimation = null;
+
+        if (data.mode) {
+            this.pieceManager.setMode(data.mode);
+        }
+        this.pieceManager.setLevel(this.level);
+
+        this.activePiece = data.activePiece ? Piece.deserialize(data.activePiece) : null;
+        this.activePos = data.activePos ? new Vector3(data.activePos.x, data.activePos.y, data.activePos.z) : new Vector3(0, 0, 0);
+        this.nextPiece = data.nextPiece ? Piece.deserialize(data.nextPiece) : this.pieceManager.getNextPiece();
+
+        this.fallTimer = data.fallTimer || 0;
+        this.lockTimer = data.lockTimer || 0;
+        this.isLocking = Boolean(data.isLocking);
+
+        if (!this.activePiece) {
+            this.spawnPiece();
+        }
+
+        this.updateHighScore();
+        this.onScoreChange(this.score, this.cubesPlayed, this.layersClearedTotal, this.layersPerLevel);
+        return true;
+    }
+
+    /**
+     * Saves active human game to localStorage.
+     */
+    saveToStorage() {
+        if (this.demoMode || this.gameOver) return;
+        // Never save an empty/unplayed game with zero progress
+        if (this.cubesPlayed === 0 && this.score === 0) return;
+        try {
+            if (typeof localStorage !== 'undefined') {
+                const serialized = this.serializeState();
+                localStorage.setItem('blockdown_saved_game', JSON.stringify(serialized));
+            }
+        } catch (e) {
+            console.warn('Could not save game to localStorage:', e);
+        }
+    }
+
+    /**
+     * Removes saved game from localStorage.
+     */
+    clearSavedGame() {
+        try {
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem('blockdown_saved_game');
+            }
+        } catch (e) {}
     }
 }

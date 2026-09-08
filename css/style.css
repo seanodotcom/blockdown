@@ -425,6 +425,16 @@ body {
         0 0 15px rgba(255, 59, 48, 0.5);
 }
 
+.logo-ver {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--dos-yellow);
+    text-shadow: 1px 1px 0 #665500;
+    vertical-align: super;
+    margin-left: 4px;
+}
+
 /* Classic Retro Box */
 .hud-box {
     border: 2px solid var(--dos-cyan);
@@ -624,8 +634,9 @@ body {
     border: 3px solid var(--dos-green);
     box-shadow: 0 0 30px rgba(0, 224, 64, 0.4);
     padding: 24px;
-    max-width: 500px;
-    width: 90%;
+    max-width: 560px;
+    width: 92%;
+    box-sizing: border-box;
     color: var(--dos-green);
 }
 
@@ -664,6 +675,12 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
+}
+
+.setting-row label {
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .setting-select {
@@ -673,6 +690,19 @@ body {
     font-family: 'Share Tech Mono', monospace;
     font-size: 14px;
     padding: 4px 8px;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+@media (max-width: 560px) {
+    .setting-row:not(.checkbox-row) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    .setting-select {
+        width: 100%;
+    }
 }
 
 /* Responsive design */

@@ -301,6 +301,98 @@ import('./js/renderer.js').then(({ GameRenderer }) => {
         }
         console.log('PASS: Marquee3D endless wrapping, 3D rotations, shading, and descriptor splitting verified!');
 
+        // 10. Test State Serialization, Deserialization, and LocalStorage Persistence
+        console.log('Testing Game State Serialization & LocalStorage Persistence...');
+        const testGame = new BlockdownGame({ pitWidth: 5, pitHeight: 5, pitDepth: 12 });
+        testGame.grid[1][2][11] = true;
+        testGame.grid[3][3][10] = true;
+        testGame.score = 4200;
+        testGame.cubesPlayed = 28;
+        testGame.level = 2;
+        testGame.layersClearedTotal = 7;
+        testGame.activePos = new Vector3(2, 1, 4);
+
+        // Rotate active piece to test rotation preservation
+        testGame.activePiece.rotate('pitch', 1);
+        const originalActiveCubes = testGame.activePiece.cubes.map(c => [c.x, c.y, c.z]);
+
+        const serialized = testGame.serializeState();
+        if (!serialized.grid[1][2][11] || !serialized.grid[3][3][10]) {
+            throw new Error('Serialized state missing grid blocks');
+        }
+        if (serialized.score !== 4200 || serialized.level !== 2) {
+            throw new Error(`Serialized state unexpected score/level: ${serialized.score}, ${serialized.level}`);
+        }
+
+        // Restore into brand new game
+        const restoredGame = new BlockdownGame({ pitWidth: 3, pitHeight: 3, pitDepth: 10 }); // deliberate different dimensions to test resize
+        const restoreSuccess = restoredGame.restoreState(serialized);
+        if (!restoreSuccess) {
+            throw new Error('restoreState returned false');
+        }
+        if (restoredGame.pitWidth !== 5 || restoredGame.pitHeight !== 5 || restoredGame.pitDepth !== 12) {
+            throw new Error(`Pit dimensions not restored properly: ${restoredGame.pitWidth}x${restoredGame.pitHeight}x${restoredGame.pitDepth}`);
+        }
+        if (!restoredGame.grid[1][2][11] || !restoredGame.grid[3][3][10] || restoredGame.grid[0][0][0]) {
+            throw new Error('Grid contents not faithfully restored');
+        }
+        if (restoredGame.score !== 4200 || restoredGame.level !== 2 || restoredGame.layersClearedTotal !== 7) {
+            throw new Error('Score / level / clears not faithfully restored');
+        }
+        if (!restoredGame.paused) {
+            throw new Error('Restored game should be safely paused');
+        }
+        if (restoredGame.activePos.x !== 2 || restoredGame.activePos.y !== 1 || restoredGame.activePos.z !== 4) {
+            throw new Error('Active piece position not faithfully restored');
+        }
+        const restoredActiveCubes = restoredGame.activePiece.cubes.map(c => [c.x, c.y, c.z]);
+        if (JSON.stringify(originalActiveCubes) !== JSON.stringify(restoredActiveCubes)) {
+            throw new Error('Active piece rotation / cubes not faithfully restored');
+        }
+
+        // Mock localStorage to verify saveToStorage and clearSavedGame
+        const mockStore = {};
+        globalThis.localStorage = {
+            getItem: (k) => mockStore[k] || null,
+            setItem: (k, v) => { mockStore[k] = String(v); },
+            removeItem: (k) => { delete mockStore[k]; }
+        };
+
+        // Pre-populate with an existing saved game
+        testGame.saveToStorage();
+        if (!mockStore['blockdown_saved_game']) {
+            throw new Error('saveToStorage failed to write blockdown_saved_game to storage');
+        }
+        const parsedSaved = JSON.parse(mockStore['blockdown_saved_game']);
+        if (parsedSaved.score !== 4200) {
+            throw new Error(`Saved game JSON score expected 4200, got ${parsedSaved.score}`);
+        }
+
+        // CRITICAL REGRESSION TEST: Constructing a brand new game must NOT overwrite an existing saved game!
+        const brandNewGame = new BlockdownGame({ pitWidth: 5, pitHeight: 5, pitDepth: 12 });
+        brandNewGame.saveToStorage(); // Empty game should not save
+        const afterConstructSaved = JSON.parse(mockStore['blockdown_saved_game']);
+        if (afterConstructSaved.score !== 4200) {
+            throw new Error('REGRESSION: Constructing a new game overwrote existing saved game with empty state!');
+        }
+
+        // Place a piece and verify placed cubes are saved
+        brandNewGame.hardDrop();
+        if (brandNewGame.cubesPlayed === 0) {
+            throw new Error('hardDrop did not increment cubesPlayed');
+        }
+        const savedAfterDrop = JSON.parse(mockStore['blockdown_saved_game']);
+        if (savedAfterDrop.cubesPlayed !== brandNewGame.cubesPlayed) {
+            throw new Error('saveToStorage did not persist placed cubes after drop');
+        }
+
+        testGame.clearSavedGame();
+        if (mockStore['blockdown_saved_game']) {
+            throw new Error('clearSavedGame failed to remove saved game from storage');
+        }
+
+        console.log('PASS: Game state serialization, restoration, and localStorage persistence verified (including empty state overwrite protection)!');
+
         console.log('--- ALL ENGINE, SHADOW, AND MARQUEE TESTS PASSED! ---');
     });
 });

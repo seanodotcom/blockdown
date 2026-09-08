@@ -1,4 +1,4 @@
-# BLOCKDOWN
+# BLOCKDOWN v0.3
 
 > *Like the classic Blockout... but down!*
 
@@ -10,11 +10,15 @@ A faithful web-based clone of California Dreams' legendary 1989 DOS 3D puzzle ga
 
 ## Features
 
+- **Settings & Mid-Game Auto-Save Persistence (v0.3)**:
+  - All game configuration preferences (Pit Dimensions, Block Progression Mode, Control Layout, Clears to Level Up, CRT Scanlines, CRT Bezel, Audio Mute) are preserved across browser refreshes and sessions via `localStorage`.
+  - Mid-game session state is continuously auto-saved on piece locks, pause, tab hidden, and window close.
+  - On reopening the browser, active placed pit blocks, level, score, and active falling piece are safely restored in a paused state under the **GAME SAVED** modal until the player interacts.
 - **Retro 1989 DOS Graphics**:
   - Classic green phosphor wireframe perspective tunnel with depth segments.
   - Placed blocks color-coded by depth layer (classic Royal Blue bottom layer, Cyan, Emerald Green, Yellow, Orange, Red, Magenta) with 3D front-face bevel lighting.
   - Vintage **Compaq Presario 1425 Multimedia** CRT monitor bezel with scanlines, curvature, and screen glow (toggleable via `CRT: ON/OFF`).
-  - 3D shaded isometric **BLOCK DOWN** logo and retro DOS HUD layout.
+  - 3D shaded isometric **BLOCK DOWN v0.3** logo and retro DOS HUD layout.
   - 3D rotating **Next Piece** wireframe preview box.
 - **Level Advance Modal & 3D Endless Marquee (v0.2)**:
   - On level up, the game pauses to showcase newly unlocked polycubes in a seamless, animated horizontal marquee.

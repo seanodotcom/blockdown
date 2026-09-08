@@ -58,17 +58,93 @@ window.addEventListener('DOMContentLoaded', () => {
         bannerMarqueeWrap.classList.remove('show');
         bannerPrompt.classList.remove('show');
         bannerTitle.textContent = title;
-        bannerSubtitle.textContent = subtitle;
+        bannerSubtitle.innerHTML = subtitle;
         notificationBanner.classList.add('show');
-        notificationTimeout = setTimeout(() => {
-            if (!waitingForLevelAdvance) {
-                notificationBanner.classList.remove('show');
-            }
-        }, durationMs);
+        if (durationMs && durationMs > 0) {
+            notificationTimeout = setTimeout(() => {
+                if (!waitingForLevelAdvance) {
+                    notificationBanner.classList.remove('show');
+                }
+            }, durationMs);
+        }
     }
 
     let controlScheme = 'classic'; // 'classic' | 'wasd'
     let waitingForLevelAdvance = false;
+    let bezelOn = true;
+
+    // --- Settings Storage & Restoration ---
+    const SETTINGS_KEY = 'blockdown_settings';
+
+    function saveSettings() {
+        try {
+            const settings = {
+                pit: pitSelect ? pitSelect.value : '5x5x12',
+                mode: modeSelect ? modeSelect.value : 'progression',
+                controls: controlSelect ? controlSelect.value : 'classic',
+                layersPerLevel: layersPerLevelSelect ? parseInt(layersPerLevelSelect.value, 10) : 3,
+                scanlines: scanlineToggle ? scanlineToggle.checked : true,
+                bezel: bezelOn,
+                audioMuted: audio ? audio.isMuted : false
+            };
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        } catch (e) {
+            console.warn('Could not save settings to localStorage:', e);
+        }
+    }
+
+    function loadSettings() {
+        try {
+            const saved = localStorage.getItem(SETTINGS_KEY);
+            return saved ? JSON.parse(saved) : null;
+        } catch (e) {
+            console.warn('Could not load settings from localStorage:', e);
+            return null;
+        }
+    }
+
+    const savedSettings = loadSettings();
+    let initialPitW = 5, initialPitH = 5, initialPitD = 12;
+    let initialLayersPerLevel = 3;
+    let initialMode = 'progression';
+
+    if (savedSettings) {
+        if (savedSettings.pit) {
+            const [w, h, d] = savedSettings.pit.split('x').map(n => parseInt(n, 10));
+            if (w && h && d) {
+                initialPitW = w;
+                initialPitH = h;
+                initialPitD = d;
+            }
+            if (pitSelect) pitSelect.value = savedSettings.pit;
+        }
+        if (savedSettings.mode) {
+            initialMode = savedSettings.mode;
+            if (modeSelect) modeSelect.value = savedSettings.mode;
+        }
+        if (savedSettings.controls && controlSelect) {
+            controlSelect.value = savedSettings.controls;
+            controlScheme = savedSettings.controls;
+        }
+        if (savedSettings.layersPerLevel) {
+            initialLayersPerLevel = savedSettings.layersPerLevel;
+            if (layersPerLevelSelect) layersPerLevelSelect.value = savedSettings.layersPerLevel.toString();
+        }
+        if (typeof savedSettings.scanlines === 'boolean') {
+            scanlineToggle.checked = savedSettings.scanlines;
+            scanlines.classList.toggle('off', !savedSettings.scanlines);
+        }
+        if (typeof savedSettings.bezel === 'boolean') {
+            bezelOn = savedSettings.bezel;
+            monitorFrame.classList.toggle('no-bezel', !bezelOn);
+            crtBtn.textContent = bezelOn ? 'CRT BEZEL: ON' : 'CRT BEZEL: OFF';
+        }
+        if (typeof savedSettings.audioMuted === 'boolean' && savedSettings.audioMuted) {
+            audio.isMuted = true;
+            audioBtn.textContent = 'AUDIO: OFF';
+            audioBtn.classList.remove('active');
+        }
+    }
 
     function dismissLevelModal() {
         if (!waitingForLevelAdvance && !notificationBanner.classList.contains('level-up-modal')) return;
@@ -82,10 +158,10 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     const game = new BlockdownGame({
-        pitWidth: 5,
-        pitHeight: 5,
-        pitDepth: 12,
-        layersPerLevel: 3,
+        pitWidth: initialPitW,
+        pitHeight: initialPitH,
+        pitDepth: initialPitD,
+        layersPerLevel: initialLayersPerLevel,
         audio: audio,
         onScoreChange: (score, cubes, layersCleared, layersPerLevel) => {
             scoreDisplay.textContent = score.toString();
@@ -179,6 +255,10 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Set piece manager mode & renderer dimensions from settings
+    game.pieceManager.setMode(initialMode);
+    renderer.setPitDimensions(game.pitWidth, game.pitHeight, game.pitDepth);
+
     // Update initial UI
     levelDisplay.textContent = game.level.toString();
     if (layerProgressDisplay) {
@@ -188,6 +268,7 @@ window.addEventListener('DOMContentLoaded', () => {
     cubesDisplay.textContent = game.cubesPlayed.toString();
     highScoreDisplay.textContent = game.highScore.toString();
     pitSizeDisplay.textContent = `${game.pitWidth}x${game.pitHeight}x${game.pitDepth}`;
+    blockSetDisplay.textContent = initialMode.toUpperCase();
 
     // Resize handler
     function handleResize() {
@@ -233,18 +314,21 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         if (e.code === 'KeyR') {
+            game.clearSavedGame();
             game.reset();
             levelDisplay.textContent = '0';
             if (layerProgressDisplay) {
                 layerProgressDisplay.textContent = `0/${game.layersPerLevel} CLEARS`;
             }
             ai.reset();
+            notificationBanner.classList.remove('show');
             return;
         }
 
-        if (e.code === 'KeyP') {
+        if (e.code === 'KeyP' || (game.paused && ['Space', 'Enter'].includes(e.code))) {
             game.paused = !game.paused;
             if (game.paused) {
+                game.saveToStorage();
                 showNotification('PAUSED', 'Press P to resume', 60000);
             } else {
                 notificationBanner.classList.remove('show');
@@ -256,6 +340,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const isMuted = audio.toggleMute();
             audioBtn.textContent = isMuted ? 'AUDIO: OFF' : 'AUDIO: ON';
             audioBtn.classList.toggle('active', !isMuted);
+            saveSettings();
             return;
         }
 
@@ -321,6 +406,9 @@ window.addEventListener('DOMContentLoaded', () => {
     notificationBanner.addEventListener('click', () => {
         if (waitingForLevelAdvance) {
             dismissLevelModal();
+        } else if (game.paused && !game.gameOver && !game.demoMode) {
+            game.paused = false;
+            notificationBanner.classList.remove('show');
         }
     });
 
@@ -335,6 +423,10 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             const act = btn.getAttribute('data-act');
             if (game.demoMode) toggleDemoMode(false);
+            if (game.paused && !game.gameOver) {
+                game.paused = false;
+                notificationBanner.classList.remove('show');
+            }
 
             switch (act) {
                 case 'left': game.move(-1, 0); break;
@@ -362,6 +454,7 @@ window.addEventListener('DOMContentLoaded', () => {
             showNotification('DEMO MODE', 'AI is playing Blockdown. Press any key or button to take over!', 3000);
         } else {
             if (prev && resetOnExit) {
+                game.clearSavedGame();
                 game.reset();
                 levelDisplay.textContent = '0';
                 if (layerProgressDisplay) {
@@ -376,8 +469,64 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Start in Demo Mode by default (faithful to the demo video!)
-    toggleDemoMode(true, false);
+    function hasSavedGameContent(savedData) {
+        if (!savedData || !savedData.grid) return false;
+        if (savedData.score > 0 || savedData.cubesPlayed > 0) return true;
+        for (let x = 0; x < savedData.pitWidth; x++) {
+            for (let y = 0; y < savedData.pitHeight; y++) {
+                for (let z = 0; z < savedData.pitDepth; z++) {
+                    if (savedData.grid[x] && savedData.grid[x][y] && savedData.grid[x][y][z]) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    // Check for saved in-progress human game
+    let hasRestoredGame = false;
+    try {
+        const savedGameJson = localStorage.getItem('blockdown_saved_game');
+        if (savedGameJson) {
+            const savedData = JSON.parse(savedGameJson);
+            if (hasSavedGameContent(savedData)) {
+                if (savedData.pitWidth !== game.pitWidth || savedData.pitHeight !== game.pitHeight || savedData.pitDepth !== game.pitDepth) {
+                    game.setPitDimensions(savedData.pitWidth, savedData.pitHeight, savedData.pitDepth);
+                    renderer.setPitDimensions(savedData.pitWidth, savedData.pitHeight, savedData.pitDepth);
+                    if (pitSelect) pitSelect.value = `${savedData.pitWidth}x${savedData.pitHeight}x${savedData.pitDepth}`;
+                    pitSizeDisplay.textContent = `${savedData.pitWidth}x${savedData.pitHeight}x${savedData.pitDepth}`;
+                }
+                const restored = game.restoreState(savedData);
+                if (restored) {
+                    hasRestoredGame = true;
+                }
+            } else {
+                localStorage.removeItem('blockdown_saved_game');
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to restore saved game:', e);
+    }
+
+    if (hasRestoredGame) {
+        game.demoMode = false;
+        demoModeBtn.classList.remove('active');
+        game.paused = true;
+        levelDisplay.textContent = game.level.toString();
+        if (layerProgressDisplay) {
+            const currentInLevel = game.layersClearedTotal % game.layersPerLevel;
+            layerProgressDisplay.textContent = `${currentInLevel}/${game.layersPerLevel} CLEARS`;
+        }
+        scoreDisplay.textContent = game.score.toString();
+        cubesDisplay.textContent = game.cubesPlayed.toString();
+        highScoreDisplay.textContent = game.highScore.toString();
+        blockSetDisplay.textContent = game.pieceManager.mode.toUpperCase();
+        showNotification('GAME SAVED', 'Game is paused.<br>Press P to resume!', 0);
+    } else {
+        // Start in Demo Mode by default (faithful to the demo video!)
+        toggleDemoMode(true, false);
+    }
 
     demoModeBtn.addEventListener('click', () => {
         audio.init();
@@ -389,15 +538,16 @@ window.addEventListener('DOMContentLoaded', () => {
         const isMuted = audio.toggleMute();
         audioBtn.textContent = isMuted ? 'AUDIO: OFF' : 'AUDIO: ON';
         audioBtn.classList.toggle('active', !isMuted);
+        saveSettings();
     });
 
     // CRT Bezel toggle
-    let bezelOn = true;
     crtBtn.addEventListener('click', () => {
         bezelOn = !bezelOn;
         monitorFrame.classList.toggle('no-bezel', !bezelOn);
         crtBtn.textContent = bezelOn ? 'CRT BEZEL: ON' : 'CRT BEZEL: OFF';
         handleResize();
+        saveSettings();
     });
 
     // Settings Modal
@@ -419,11 +569,13 @@ window.addEventListener('DOMContentLoaded', () => {
     pitSelect.addEventListener('change', (e) => {
         const val = e.target.value;
         const [w, h, d] = val.split('x').map(n => parseInt(n, 10));
+        game.clearSavedGame();
         game.setPitDimensions(w, h, d);
         renderer.setPitDimensions(w, h, d);
         pitSizeDisplay.textContent = `${w}x${h}x${d}`;
         ai.reset();
         handleResize();
+        saveSettings();
     });
 
     // Block set mode change
@@ -432,12 +584,17 @@ window.addEventListener('DOMContentLoaded', () => {
         game.pieceManager.setMode(mode);
         blockSetDisplay.textContent = mode.toUpperCase();
         ai.reset();
+        saveSettings();
+        if (!game.demoMode && !game.gameOver) {
+            game.saveToStorage();
+        }
     });
 
     // Control scheme change
     controlSelect.addEventListener('change', (e) => {
         controlScheme = e.target.value;
         updateControlsGuide();
+        saveSettings();
     });
 
     // Clears per level change
@@ -447,6 +604,10 @@ window.addEventListener('DOMContentLoaded', () => {
             if (layerProgressDisplay) {
                 const currentInLevel = game.layersClearedTotal % game.layersPerLevel;
                 layerProgressDisplay.textContent = `${currentInLevel}/${game.layersPerLevel} CLEARS`;
+            }
+            saveSettings();
+            if (!game.demoMode && !game.gameOver) {
+                game.saveToStorage();
             }
         });
     }
@@ -472,6 +633,22 @@ window.addEventListener('DOMContentLoaded', () => {
     // Scanlines toggle
     scanlineToggle.addEventListener('change', (e) => {
         scanlines.classList.toggle('off', !e.target.checked);
+        saveSettings();
+    });
+
+    // Auto-save active game on window unload or tab hidden
+    window.addEventListener('beforeunload', () => {
+        if (!game.demoMode && !game.gameOver) {
+            game.saveToStorage();
+        }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            if (!game.demoMode && !game.gameOver) {
+                game.saveToStorage();
+            }
+        }
     });
 
     // --- Main Game Loop (60 FPS) ---

@@ -202,6 +202,27 @@ export class Piece {
             d: maxZ + 1
         };
     }
+
+    serialize() {
+        return {
+            id: this.id,
+            name: this.name,
+            category: this.category,
+            tier: this.tier,
+            cubes: this.cubes.map(c => [c.x, c.y, c.z])
+        };
+    }
+
+    static deserialize(data) {
+        if (!data) return null;
+        const piece = Object.create(Piece.prototype);
+        piece.id = data.id;
+        piece.name = data.name;
+        piece.category = data.category;
+        piece.tier = data.tier;
+        piece.cubes = (data.cubes || []).map(([x, y, z]) => new Vector3(x, y, z));
+        return piece;
+    }
 }
 
 /**

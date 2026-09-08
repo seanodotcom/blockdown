@@ -1,6 +1,6 @@
 {
   "name": "blockdown",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Blockdown - Classic 1989 DOS 3D Puzzle Game Clone of Blockout",
   "type": "module",
   "scripts": {
